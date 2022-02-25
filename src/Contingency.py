@@ -19,7 +19,7 @@ class Contingency:
 
     def __init__(self, triggerDistance, motorDriver):
         self.obstacles = []  # a list of numbers in terms of degree which indicate where the obstacles are
-        self.motorDriver = MotorDriver()
+        # self.motorDriver = MotorDriver()
         self.triggerDistance = triggerDistance
         self.closestGap = None
 

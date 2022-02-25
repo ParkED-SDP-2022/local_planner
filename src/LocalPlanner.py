@@ -3,18 +3,14 @@
 #from UltrasonicControllers.Ultrasonic import UltrasonicSensor
 #import MotorDriver
 
-
-
 from Contingency import Contingency
 import rospy
 from parked_custom_msgs import Robot_Sensor_State,Point
 from collections import namedtuple
-from std_msgs import String
+from geometry_msgs import Twist
 
 # location 'struct' for use
 Location = namedtuple("Location", "longitude latitude")
-
-
 
 class LocalPlanner():
 
@@ -26,16 +22,27 @@ class LocalPlanner():
         self.usReading = float('inf')
         self.usDistTolerance = 40
 
+        self.twist = Twist()
+        self.init_twist()
+
         ## we need global path
         rospy.init_node('local_planner', anonymous=True)
         rospy.Subscriber("sensor_state", Robot_Sensor_State, self.parse_sensor_state)
         rospy.Subscriber('bench1/gps_pos', Point, self.updateLocation)
 
-        self.cmdvel_pub = rospy.Publisher('cmd_vel', String, queue_size=10)
+        self.cmdvel_pub = rospy.Publisher('cmd_vel', Twist , queue_size=10)
         self.rate = rospy.Rate(10) # 10hz
     
         self.run_mainflow()
 
+    def init_twist(self):
+        self.twist.linear.x = 0.0
+        self.twist.linear.y = 0.0
+        self.twist.linear.z = 0.0
+
+        self.twist.angular.x = 0.0
+        self.twist.angular.y = 0.0
+        self.twist.angular.z = 0.0
 
     def parse_sensor_state(self,data):
         
@@ -63,21 +70,24 @@ class LocalPlanner():
         while(currentLoc != finalLoc):
             nextLocIndex = self.currentLocIndex + 1
             nextLoc = self.globalPath[nextLocIndex]
-            success = self.moveToPoint(currentLoc,nextLoc)
+            # need to spin to the next header
+            self.spin()
+            success = self.moveStraight(currentLoc,nextLoc)
         
 
 
-    def moveToPoint(self,target):
+    def moveStraight(self,target):
         
         objectDetected = self.scanObstacleUS()
-
+ 
         while ( not objectDetected or self.checkReachTarget(target)):
 
             # TODO : integrate ros movement
             if (not rospy.is_shutdown()):
-                hello_str = "hello world %s" % rospy.get_time()
-                rospy.loginfo(hello_str)
-                self.cmdvel_pub.publish(hello_str)
+                self.twist.linear.x = 1.0
+                self.twist.angular.z = 0
+                #rospy.loginfo())
+                self.cmdvel_pub.publish(self.twist)
                                       
 
             # TODO : target heading calculation
@@ -107,6 +117,15 @@ class LocalPlanner():
             return True
         
         return False
+
+    def spin(self):
+
+        if (not rospy.is_shutdown()):
+            self.twist.linear.x = 0
+            self.twist.angular.y = 0.1
+            # rospy.loginfo(hello_str)
+            self.cmdvel_pub.publish(self.twist)
+
 
 
 
