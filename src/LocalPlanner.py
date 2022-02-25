@@ -9,7 +9,7 @@ from Contingency import Contingency
 import rospy
 from parked_custom_msgs import Robot_Sensor_State,Point
 from collections import namedtuple
-
+from std_msgs import String
 
 # location 'struct' for use
 Location = namedtuple("Location", "longitude latitude")
@@ -31,6 +31,9 @@ class LocalPlanner():
         rospy.Subscriber("sensor_state", Robot_Sensor_State, self.parse_sensor_state)
         rospy.Subscriber('bench1/gps_pos', Point, self.updateLocation)
 
+        self.cmdvel_pub = rospy.Publisher('cmd_vel', String, queue_size=10)
+        self.rate = rospy.Rate(10) # 10hz
+    
         self.run_mainflow()
 
 
@@ -70,7 +73,7 @@ class LocalPlanner():
 
         while ( not objectDetected or self.checkReachTarget(target)):
 
-            # TODO : integrate rosnode
+            # TODO : integrate ros movement
             #self.motorDriver.setDistance(distance)
             #self.motorDriver.setSpeed(50)
             #self.motorDriver.setHeading(0)
