@@ -35,6 +35,8 @@ class LocalPlanner():
     
         self.run_mainflow()
 
+        #rospy.spin()
+
     def init_twist(self):
         self.twist.linear.x = 0.0
         self.twist.linear.y = 0.0
@@ -62,17 +64,22 @@ class LocalPlanner():
     def run_mainflow(self):
 
         # move from one point to another point
-        self.currentLocIndex = 0
+        currentLocIndex = 0
         currentLoc = self.globalPath[0]
         finalLoc = self.globalPath[-1]
         self.myLocation = self.updateLocation()
 
         while(currentLoc != finalLoc):
-            nextLocIndex = self.currentLocIndex + 1
+            nextLocIndex = currentLocIndex + 1
             nextLoc = self.globalPath[nextLocIndex]
             # need to spin to the next header
             self.spin()
             success = self.moveStraight(currentLoc,nextLoc)
+
+            if (success) : currentLocIndex += 1
+            else :
+                rospy.loginfo("not successful")
+                break
         
 
 
@@ -80,7 +87,7 @@ class LocalPlanner():
         
         objectDetected = self.scanObstacleUS()
  
-        while ( not objectDetected or self.checkReachTarget(target)):
+        while ( not objectDetected or not self.checkReachTarget(target)):
 
             # TODO : integrate ros movement
             if (not rospy.is_shutdown()):
@@ -102,6 +109,7 @@ class LocalPlanner():
         if objectDetected :
             # self.motorDriver.motorStop()
             # go to Contingency
+            self.stop()
             self.contigency = Contingency()
 
         
@@ -109,7 +117,7 @@ class LocalPlanner():
             return True
     
     def checkReachTarget(self,target):
-        return self.myLocation != target
+        return self.myLocation == target
 
     def scanObstacleUS(self):
         
@@ -118,12 +126,19 @@ class LocalPlanner():
         
         return False
 
-    # TODO :: implement actual spin 
-    def spin(self):
+    def stop(self):
 
-        if (not rospy.is_shutdown()):
+        self.twist.linear.x = 0
+        self.twist.angular.z = 0
+        # rospy.loginfo(hello_str)
+        self.cmdvel_pub.publish(self.twist)
+
+    # TODO :: implement actual spin 
+    def spin(self,target_heading):
+
+        while(self.currentHeading != target_heading):
             self.twist.linear.x = 0
-            self.twist.angular.y = 0.1
+            self.twist.angular.z = 0.1
             # rospy.loginfo(hello_str)
             self.cmdvel_pub.publish(self.twist)
 
