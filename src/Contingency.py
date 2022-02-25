@@ -1,6 +1,4 @@
-import MotorDriver
 import math
-
 
 # find the gap by figuring out the first consecutive 40 false which indicate where the gap is.
 def consecutive_values(input_list):

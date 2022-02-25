@@ -1,23 +1,50 @@
-import MotorDriver
-import math
-import Contingency
-from UltrasonicControllers.Ultrasonic import UltrasonicSensor
+#!/usr/bin/env python
+
+#from UltrasonicControllers.Ultrasonic import UltrasonicSensor
+#import MotorDriver
+
+
+
+from Contingency import Contingency
+import rospy
+from parked_custom_msgs import Robot_Sensor_State,Point
+from collections import namedtuple
+
+
+# location 'struct' for use
+Location = namedtuple("Location", "longitude latitude")
+
+
 
 class LocalPlanner():
 
-
     def __init__(self):
         ## we need the state for our robots
-        ## we need global path
 
-        self.motorDriver = MotorDriver()
-        self.ultrasonic = UltrasonicSensor()
-
+        self.currentLocation = Location(0.0,0.0)
+        self.currentHeading = 0
+        self.usReading = float('inf')
         self.usDistTolerance = 40
 
-        self.myLocation = None
+        ## we need global path
+        rospy.init_node('local_planner', anonymous=True)
+        rospy.Subscriber("sensor_state", Robot_Sensor_State, self.parse_sensor_state)
+        rospy.Subscriber('bench1/gps_pos', Point, self.updateLocation)
 
-    
+        self.run_mainflow()
+
+
+    def parse_sensor_state(self,data):
+        
+        self.currentHeading = data.compass.heading
+        self.usReading = data.ultrasonic.distance
+
+    # update current locaton
+    def updateLocation(self,data):
+
+        self.currentLocation.longitude = data.longitude
+        self.currentLocation.latitude = data.latitude
+
     def setGlobalPath(self,globalPath):
         self.globalPath = globalPath
 
@@ -33,7 +60,7 @@ class LocalPlanner():
         while(currentLoc != finalLoc):
             nextLocIndex = self.currentLocIndex + 1
             nextLoc = self.globalPath[nextLocIndex]
-            self.moveToPoint(currentLoc,nextLoc)
+            success = self.moveToPoint(currentLoc,nextLoc)
         
 
 
@@ -43,43 +70,39 @@ class LocalPlanner():
 
         while ( not objectDetected or self.checkReachTarget(target)):
 
+            # TODO : integrate rosnode
             #self.motorDriver.setDistance(distance)
-            self.motorDriver.setSpeed(50)
+            #self.motorDriver.setSpeed(50)
             #self.motorDriver.setHeading(0)
 
             # TODO : target heading calculation
-            self.motorDriver.setTargetHeading(target_h)
-            self.motorDriver.move()
+            #self.motorDriver.setTargetHeading(target_h)
+            #self.motorDriver.move()
 
             objectDetected = self.scanObstacleUS()
             self.updateLocation()
             
         
         if objectDetected :
-            self.motorDriver.motorStop()
+            # self.motorDriver.motorStop()
             # go to Contingency
-        #if reach point2 : True
-        pass
+            self.contigency = Contingency()
+
+        
+        if self.checkReachTarget(target) : 
+            return True
     
     def checkReachTarget(self,target):
         return self.myLocation != target
 
-    # update current locaton
-    def updateLocation(self):
-
-        self.myLocation = None
-        pass
-
     def scanObstacleUS(self):
         
-        distance_forward = self.ultrasonic.distanceForward()
-        distance_backward = self.ultrasonic.distanceBackward()
-        
-        if (distance_forward <= self.usDistTolerance 
-            or distance_backward <= self.usDistTolerance):
+        if (self.usReading <= self.usDistTolerance):
             return True
         
         return False
+
+
 
 
 
