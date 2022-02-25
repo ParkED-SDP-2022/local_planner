@@ -74,16 +74,19 @@ class LocalPlanner():
         while ( not objectDetected or self.checkReachTarget(target)):
 
             # TODO : integrate ros movement
-            #self.motorDriver.setDistance(distance)
-            #self.motorDriver.setSpeed(50)
-            #self.motorDriver.setHeading(0)
+            if (not rospy.is_shutdown()):
+                hello_str = "hello world %s" % rospy.get_time()
+                rospy.loginfo(hello_str)
+                self.cmdvel_pub.publish(hello_str)
+                                      
 
             # TODO : target heading calculation
             #self.motorDriver.setTargetHeading(target_h)
             #self.motorDriver.move()
 
             objectDetected = self.scanObstacleUS()
-            self.updateLocation()
+
+            self.rate.sleep()  
             
         
         if objectDetected :
