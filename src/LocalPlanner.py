@@ -3,6 +3,7 @@
 #from UltrasonicControllers.Ultrasonic import UltrasonicSensor
 #import MotorDriver
 
+import math
 from Contingency import Contingency
 import rospy
 from parked_custom_msgs import Robot_Sensor_State,Point
@@ -97,7 +98,17 @@ class LocalPlanner():
                 self.cmdvel_pub.publish(self.twist)
                                       
 
-            # TODO : target heading calculation
+            # target heading calculation
+            long1 = self.currentLocation.longitude
+            lat1 = self.currentLocation.latitude
+            long2 = target.longitude
+            lat2 = target.latitude
+
+            y = math.sin(long2-long1)*math.cos(lat2)
+            x = math.cos(lat1)*math.sin(lat2) - math.sin(lat1)*math.cos(lat2)*math.cos(long2-long1)
+            θ = math.atan2(y, x)
+            target_h = (θ*180/math.pi + 360) % 360
+
             #self.motorDriver.setTargetHeading(target_h)
             #self.motorDriver.move()
 
