@@ -56,7 +56,8 @@ class LocalPlanner():
         # move from one point to another point
         currentLocIndex = 0
         currentLoc = self.globalPath[0]
-    
+
+        # TODO : define closeTo for Point
         while(currentLoc != self.goal):
             nextLocIndex = currentLocIndex + 1
             nextLoc = self.globalPath[nextLocIndex]
@@ -68,6 +69,9 @@ class LocalPlanner():
             else :
                 rospy.loginfo("not successful")
                 return False
+        
+        # need to spin to change heading to goal heading
+        self.spin(self.goal)
         
         return True
     
