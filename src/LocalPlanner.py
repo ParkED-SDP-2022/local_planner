@@ -1,24 +1,20 @@
 #!/usr/bin/env python
 
-#from UltrasonicControllers.Ultrasonic import UltrasonicSensor
-#import MotorDriver
-
 import math
 from Contingency import Contingency
 import rospy
-from parked_custom_msgs import Robot_Sensor_State,Point
-from collections import namedtuple
+from parked_custom_msgs.msg import Point, Robot_Sensor_State
 from geometry_msgs import Twist
-
-# location 'struct' for use
-Location = namedtuple("Location", "longitude latitude")
 
 class LocalPlanner():
 
-    def __init__(self):
+    def __init__(self,goal,globalPath):
         ## we need the state for our robots
 
-        self.currentLocation = Location(0.0,0.0)
+        self.goal = goal
+        self.globalPath = globalPath
+        
+        self.currentLocation = Point()
         self.currentHeading = 0
         self.usReading = float('inf')
         self.usDistTolerance = 40
@@ -34,8 +30,6 @@ class LocalPlanner():
         self.cmdvel_pub = rospy.Publisher('cmd_vel', Twist , queue_size=10)
         self.rate = rospy.Rate(10) # 10hz
     
-        self.run_mainflow()
-
         #rospy.spin()
 
     def init_twist(self):
@@ -55,35 +49,28 @@ class LocalPlanner():
     # update current locaton
     def updateLocation(self,data):
 
-        self.currentLocation.longitude = data.longitude
-        self.currentLocation.latitude = data.latitude
+        self.currentLocation = data
 
-    def setGlobalPath(self,globalPath):
-        self.globalPath = globalPath
-
-
-    def run_mainflow(self):
+    def execute_mainflow(self):
 
         # move from one point to another point
         currentLocIndex = 0
         currentLoc = self.globalPath[0]
-        finalLoc = self.globalPath[-1]
-        self.myLocation = self.updateLocation()
-
-        while(currentLoc != finalLoc):
+    
+        while(currentLoc != self.goal):
             nextLocIndex = currentLocIndex + 1
             nextLoc = self.globalPath[nextLocIndex]
-            # need to spin to the next header
+            # need to spin (change heading) to the next location
             self.spin()
             success = self.moveStraight(currentLoc,nextLoc)
 
             if (success) : currentLocIndex += 1
             else :
                 rospy.loginfo("not successful")
-                break
+                return False
         
-
-
+        return True
+    
     def moveStraight(self,target):
         
         objectDetected = self.scanObstacleUS()
@@ -109,8 +96,7 @@ class LocalPlanner():
             θ = math.atan2(y, x)
             target_h = (θ*180/math.pi + 360) % 360
 
-            #self.motorDriver.setTargetHeading(target_h)
-            #self.motorDriver.move()
+            # TODO : spin until we reach target heading
 
             objectDetected = self.scanObstacleUS()
 
