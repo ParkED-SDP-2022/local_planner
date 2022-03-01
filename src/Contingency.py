@@ -1,4 +1,7 @@
 import math
+import rospy
+from parked_custom_msgs.msg import Point, Robot_Sensor_State
+from geometry_msgs.msg import Twist
 
 # find the gap by figuring out the first consecutive 40 false which indicate where the gap is.
 def consecutive_values(input_list):
@@ -23,6 +26,11 @@ class Contingency:
         self.triggerDistance = triggerDistance
         self.closestGap = None
 
+        rospy.Subscriber("sensor_state", Robot_Sensor_State, self.parse_sensor_state)
+        rospy.Subscriber('bench1/gps_pos', Point, self.updateLocation)
+
+        self.cmdvel_pub = rospy.Publisher('cmd_vel', Twist , queue_size=10)
+
         # a gap from 0 to 90, for temporary use
         for i in range(90):
             self.obstacles.append(False)
@@ -32,13 +40,9 @@ class Contingency:
     # this method fills 'obstacles' so that we know where they are
     def spin(self):
         for heading in range(90):
-            self.motorDriver.setDistance(0)
-            self.motorDriver.setSpeed(50)
-            self.motorDriver.setHeading(0)
-            self.motorDriver.setTargetHeading(1)
-            self.motorDriver.move()
-            self.motorDriver.motorStop()
+            # TODO change it to publish to cmd_vel
             # self.obstacles.append() # if there is obstacle then append true vice versa
+            pass
 
     def find_gap(self):
         # find the gap clockwise
@@ -66,9 +70,6 @@ class Contingency:
             deg = target_h
         
         distance = self.triggerDistance / math.cos(math.radians(deg))
-        self.motorDriver.setDistance(distance)
-        self.motorDriver.setSpeed(50)
-        self.motorDriver.setHeading(0)
-        self.motorDriver.setTargetHeading(target_h)
-        self.motorDriver.move()
-        self.motorDriver.motorStop()
+
+        # TODO change it to publish to cmd_vel
+        
