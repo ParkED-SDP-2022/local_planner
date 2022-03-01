@@ -1,11 +1,11 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 import rospy
 import actionlib
 from parked_custom_msgs.msg import NavigateFeedback, NavigateAction, NavigateResult, Point, Robot_Sensor_State
 from LocalPlanner import LocalPlanner
 
-class LocalPlanner(object):
+class ActionServer(object):
 
     _feedback = NavigateFeedback()
     _result = NavigateResult()
@@ -14,9 +14,11 @@ class LocalPlanner(object):
         
         self._action_name = name
         self._as = actionlib.SimpleActionServer(self._action_name, NavigateAction, execute_cb=self.execute_cb, auto_start=False)
-        print('Local Planner Server Starting')
+        print('Local Planner Server Starting' + " " + name)
         self._as.start()
         print('Local Planner Server Server started')
+
+        self.local_plan = LocalPlanner()
         
     
     def execute_cb(self, goal):
@@ -24,12 +26,14 @@ class LocalPlanner(object):
         success = True
 
         goal_pos = goal.destination
-        path = goal.path
+        path = goal.Path
 
         self._as.publish_feedback(self._feedback)
 
-        local_planner = LocalPlanner(goal_pos,path)
-        success = local_planner.execute_mainflow()
+        self.local_plan.set_goal(goal_pos)
+        self.local_plan.set_path(path)
+
+        success = self.local_plan.execute_mainflow()
         
         if success:
             self._as.set_succeeded(self._result)
@@ -37,5 +41,5 @@ class LocalPlanner(object):
 
 if __name__ == '__main__':
     rospy.init_node('bench_x_local_planner')
-    server = LocalPlanner(rospy.get_name())
+    server = ActionServer(rospy.get_name())
     rospy.spin()
