@@ -154,12 +154,19 @@ class LocalPlanner():
         # rospy.loginfo(hello_str)
         self.cmdvel_pub.publish(self.twist)
 
-    # TODO :: implement actual spin 
     def spin(self,target_heading):
 
         while(self.currentHeading != target_heading):
+            # if heading_difference below 180, target is to the left; above 180, target to the right
+            heading_difference = (target_heading - self.currentHeading) % 360
+            
             self.twist.linear.x = 0
-            self.twist.angular.z = 0.1
+
+            if heading_difference < 180:
+                self.twist.angular.z = 0.1
+            else:
+                self.twist.angular.z = -0.1
+
             self.cmdvel_pub.publish(self.twist)
 
 

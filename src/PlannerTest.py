@@ -26,3 +26,18 @@ print(target_heading(loc2,loc1))
 print(target_heading(loc1,loc3))
 #southeast
 print(target_heading(loc3,loc1))
+
+def heading_difference(c,t):
+    heading_difference = (t - c) % 360
+    return heading_difference
+
+# target to the right
+print("Right-hand target:")
+print(heading_difference(10,350))
+print(heading_difference(350,300))
+print(heading_difference(180,10))
+# target to the left
+print("Left-hand target:")
+print(heading_difference(350,10))
+print(heading_difference(300,350))
+print(heading_difference(10,180))
