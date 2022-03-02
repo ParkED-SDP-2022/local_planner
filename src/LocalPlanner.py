@@ -19,7 +19,7 @@ class LocalPlanner():
         self.currentHeading = 0
         self.usReading = float('inf')
         self.usDistTolerance = 40
-        self.closeDistance = 40
+        self.closeDistance = 0.0001
 
         self.twist = Twist()
         self.init_twist()
@@ -54,16 +54,16 @@ class LocalPlanner():
 
     def parse_sensor_state(self,data):
         
-        self.currentHeading = data.compass.heading
+        self.currentHeading = math.degrees(data.compass.heading)
         self.usReading = data.ultrasonic.distance
 
-        rospy.loginfo("heading: " + str(self.currentHeading) + " us_d: " + str(self.usReading))
+        #rospy.loginfo("heading: " + str(self.currentHeading) + " us_d: " + str(self.usReading))
 
     # update current location
     def updateLocation(self,data):
 
         self.currentLocation = data
-        rospy.loginfo("Long : " + str(data.long) + " Lat : " + str(data.lat))
+        #rospy.loginfo("Long : " + str(data.long) + " Lat : " + str(data.lat))
 
     # check if current location is close to a point
     def closeTo(self, p2):
@@ -168,6 +168,10 @@ class LocalPlanner():
                 self.twist.angular.z = -0.1
 
             self.cmdvel_pub.publish(self.twist)
+
+            print(heading_difference)
+        
+        self.stop()
 
 
 

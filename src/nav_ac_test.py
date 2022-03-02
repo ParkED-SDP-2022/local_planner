@@ -16,18 +16,18 @@ def dummyDest():
 def dummyPath():
 
     p1 = Point()
-    p1.long = 1.0
-    p1.lat = 1.0
+    p1.long = -1
+    p1.lat = -0.5
     p1.angle = -999
 
     p2 = Point()
-    p2.long = 2.0
-    p2.lat = 2.0
+    p2.long = 0
+    p2.lat = -0.5
     p2.angle = -999
 
     p3 = Point()
-    p2.long = 2.0
-    p2.lat = 2.0
+    p2.long = 1.0
+    p2.lat = -0.5
     p2.angle = -999
 
     path = [p1,p2,p3]
