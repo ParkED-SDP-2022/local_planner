@@ -19,6 +19,7 @@ class LocalPlanner():
         self.currentHeading = 0
         self.usReading = float('inf')
         self.usDistTolerance = 40
+        self.closeDistance = 40
 
         self.twist = Twist()
         self.init_twist()
@@ -58,11 +59,16 @@ class LocalPlanner():
 
         rospy.loginfo("heading: " + str(self.currentHeading) + " us_d: " + str(self.usReading))
 
-    # update current locaton
+    # update current location
     def updateLocation(self,data):
 
         self.currentLocation = data
         rospy.loginfo("Long : " + str(data.long) + " Lat : " + str(data.lat))
+
+    # check if current location is close to a point
+    def closeTo(self, p2):
+        p1 = self.currentLocation
+        return math.dist(p1,p2) <= self.closeDistance
 
     def execute_mainflow(self):
 
@@ -119,7 +125,6 @@ class LocalPlanner():
             return True
     
     def calculateTargetHeading(self,targetPoint):
-        # target heading calculation
         long1 = self.currentLocation.long
         lat1 = self.currentLocation.lat
         long2 = targetPoint.long
@@ -133,7 +138,7 @@ class LocalPlanner():
         return target_h
         
     def checkReachTarget(self,target):
-        return self.myLocation == target
+        return self.closeTo(target)
 
     def scanObstacleUS(self):
         
