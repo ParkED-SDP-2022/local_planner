@@ -155,8 +155,10 @@ class LocalPlanner():
         self.cmdvel_pub.publish(self.twist)
 
     def spin(self,target_heading):
-
-        while(self.currentHeading != target_heading):
+        
+        heading_difference = float("inf")
+        # self.currentHeading != target_heading
+        while(heading_difference >= 0.5):
             # if heading_difference below 180, target is to the left; above 180, target to the right
             heading_difference = (target_heading - self.currentHeading) % 360
             
