@@ -27,8 +27,8 @@ class OdomToGPSConverter:
         self.odometry = data
         
         point = Point()
-        point.long = data.twist.twist.linear.x
-        point.lat = data.twist.twist.linear.y
+        point.long = data.pose.pose.position.x
+        point.lat = data.pose.pose.position.y
         point.angle = -999
         
         self.publish(point)

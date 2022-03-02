@@ -56,10 +56,13 @@ class LocalPlanner():
         self.currentHeading = data.compass.heading
         self.usReading = data.ultrasonic.distance
 
+        rospy.loginfo("heading: " + str(self.currentHeading) + " us_d: " + str(self.usReading))
+
     # update current locaton
     def updateLocation(self,data):
 
         self.currentLocation = data
+        rospy.loginfo("Long : " + str(data.long) + " Lat : " + str(data.lat))
 
     def execute_mainflow(self):
 
