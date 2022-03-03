@@ -99,7 +99,7 @@ class LocalPlanner():
 
             if (success) : nextLocIndex += 1
             else :
-                print("not suscces")
+                print("not susccess")
                 return False
         
         # need to spin to change heading to goal heading

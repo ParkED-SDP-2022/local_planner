@@ -1,4 +1,5 @@
 import math
+import time
 import rospy
 from parked_custom_msgs.msg import Point, Robot_Sensor_State
 from geometry_msgs.msg import Twist
@@ -20,29 +21,30 @@ def consecutive_values(input_list):
 
 class Contingency:
 
-    def __init__(self, triggerDistance, motorDriver):
-        self.obstacles = []  # a list of numbers in terms of degree which indicate where the obstacles are
+    def __init__(self, triggerDistance, LocalPlanner):
+        self.obstacles = [True for i in range(6)]  # a list of booleans which indicate where the obstacles are
         # self.motorDriver = MotorDriver()
         self.triggerDistance = triggerDistance
         self.closestGap = None
+        self.lp = LocalPlanner
 
         rospy.Subscriber("sensor_state", Robot_Sensor_State, self.parse_sensor_state)
         rospy.Subscriber('bench1/gps_pos', Point, self.updateLocation)
 
         self.cmdvel_pub = rospy.Publisher('cmd_vel', Twist , queue_size=10)
 
-        # a gap from 0 to 90, for temporary use
-        for i in range(90):
-            self.obstacles.append(False)
-        for i in range(270):
-            self.obstacles.append(True)
-
     # this method fills 'obstacles' so that we know where they are
     def spin(self):
-        for heading in range(90):
-            # TODO change it to publish to cmd_vel
-            # self.obstacles.append() # if there is obstacle then append true vice versa
-            pass
+        lastheading = self.lp.currentheading
+        # can it spin by 1 degree to obtain 360 values
+        for heading in range(360):
+            self.twist.angular.z = 0.3
+            self.cmdvel_pub.publish(self.twist)
+            if(self.lp.currentheading == 1 + lastheading):
+                self.stop()
+            if self.lp.usReading < 0.4:
+                self.obstacles[self.lp.currentheading + heading] = True
+            lastheading = self.lp.currentheading
 
     def find_gap(self):
         # find the gap clockwise
@@ -60,16 +62,21 @@ class Contingency:
     def go(self):
         # this finds the target heading for set target heading
         if self.closestGap > 180:
-            target_h = self.closestGap - 20
+            targetheading = self.closestGap - 20
         else:
-            target_h = self.closestGap + 20
+            targetheading = self.closestGap + 20
         # this provides parameter for distance calculation
-        if target_h > 180:
-            deg = 360 - target_h
+        if targetheading > 180:
+            deg = 360 - targetheading
         else:
-            deg = target_h
-        
-        distance = self.triggerDistance / math.cos(math.radians(deg))
+            deg = targetheading
+        distance = 0.4 / math.cos(math.radians(deg))
+        self.twist.linear.x = 0.3
+        self.twist.angular.z = 0
+        self.cmdvel_pub.publish(self.twist)
+        self.rest(distance/0.3)
+        self.stop()
+    
 
-        # TODO change it to publish to cmd_vel
-        
+    def rest(self, t):
+        time.sleep(t)     
