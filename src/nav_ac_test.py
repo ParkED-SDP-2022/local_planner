@@ -7,8 +7,8 @@ from parked_custom_msgs.msg import NavigateFeedback, NavigateAction, NavigateRes
 def dummyDest():
 
     dest = Point()
-    dest.long = 4.0
-    dest.lat = 4.0
+    dest.long = 3.0
+    dest.lat = 3.0
     dest.angle = 30
 
     return dest
@@ -16,21 +16,24 @@ def dummyDest():
 def dummyPath():
 
     p1 = Point()
-    p1.long = -1
-    p1.lat = -0.5
+    p1.long = 1.0
+    p1.lat = 1.0
     p1.angle = -999
 
     p2 = Point()
-    p2.long = 0
-    p2.lat = -0.5
+    p2.long = 2.0
+    p2.lat = 2.0
     p2.angle = -999
 
     p3 = Point()
-    p2.long = 1.0
-    p2.lat = -0.5
-    p2.angle = -999
+    p3.long = 3.0
+    p3.lat = 3.0
+    p3.angle = -999
 
-    path = [p1,p2,p3]
+    path = []
+    path.append(p1)
+    path.append(p2)
+    path.append(p3)
     return path
 
 
@@ -44,8 +47,12 @@ def navigate_client():
     # listening for goals.
     client.wait_for_server()
 
+    testPath = dummyPath()
     # Creates a goal to send to the action server.
-    goal = NavigateGoal(destination = dummyDest(),Path = dummyPath())
+    goal = NavigateGoal(destination = dummyDest(),Path = testPath)
+    
+    print(dummyPath())
+
     
     ###########################################
     ##### goal.Path not goal.path [CAPS] ######

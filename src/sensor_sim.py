@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import math
 import rospy
 from parked_custom_msgs.msg import Robot_Sensor_State,Compass,Ultrasonic_Sensor
 from geometry_msgs.msg import Twist
@@ -39,7 +40,18 @@ class SensorSimulation:
         (roll, pitch, yaw) = euler_from_quaternion([self.odom.pose.pose.orientation.x, self.odom.pose.pose.orientation.y, 
             self.odom.pose.pose.orientation.z, self.odom.pose.pose.orientation.w])
 
-        heading = yaw
+
+        yaw_deg = math.degrees(yaw)
+
+        heading = 0
+        if (yaw_deg > 90) :
+            gamma = yaw_deg - 90
+            heading = 360 - gamma
+        else : 
+            heading = 90 - yaw_deg
+        
+        #print("yaw : ", yaw_deg)
+        #print("heading: ",heading)
         compass = Compass()
         compass.heading = heading
 

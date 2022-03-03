@@ -18,8 +18,12 @@ class LocalPlanner():
         self.currentLocation = Point()
         self.currentHeading = 0
         self.usReading = float('inf')
-        self.usDistTolerance = 40
-        self.closeDistance = 0.0001
+
+        self.usDistTolerance = 0.40
+
+        self.distanceTolerance = 0.2
+        self.degreeTolerance = 0.5
+       
 
         self.twist = Twist()
         self.init_twist()
@@ -31,7 +35,7 @@ class LocalPlanner():
         rospy.Subscriber('bench1/gps_pos', Point, self.updateLocation)
 
         self.cmdvel_pub = rospy.Publisher('cmd_vel', Twist , queue_size=10)
-        self.rate = rospy.Rate(10) # 10hz
+        #self.rate = rospy.Rate(50) # 10hz
     
 
 #    def callback(self,data):
@@ -54,7 +58,7 @@ class LocalPlanner():
 
     def parse_sensor_state(self,data):
         
-        self.currentHeading = math.degrees(data.compass.heading)
+        self.currentHeading = data.compass.heading
         self.usReading = data.ultrasonic.distance
 
         #rospy.loginfo("heading: " + str(self.currentHeading) + " us_d: " + str(self.usReading))
@@ -68,56 +72,65 @@ class LocalPlanner():
     # check if current location is close to a point
     def closeTo(self, p2):
         p1 = self.currentLocation
-        return math.dist(p1,p2) <= self.closeDistance
+
+        p1_point = [p1.long,p1.lat]
+        p2_point = [p2.long,p2.lat]
+
+        #print("DISTANCE: " ,math.dist(p1_point,p2_point))
+        return math.dist(p1_point,p2_point) <= self.distanceTolerance
 
     def execute_mainflow(self):
 
         # move from one point to another point
-        currentLocIndex = 0
-        currentLoc = self.globalPath[0]
-
-        # TODO : define closeTo for Point
-        while(currentLoc != self.goal):
-            nextLocIndex = currentLocIndex + 1
+        nextLocIndex = 0
+        print("GLOBAL " ,self.globalPath)
+        # define closeTo for Point
+        while(not self.closeTo(self.goal)):
+            
             nextLoc = self.globalPath[nextLocIndex]
             # need to spin (change heading) to the next location
+            print(nextLoc)
+            #next_heading = self.calculateTargetHeading(nextLoc)
+            next_heading = self.true_bearing(self.currentLocation,nextLoc)
 
-            next_heading = self.calculateTargetHeading(nextLoc)
             self.spin(next_heading)
-            success = self.moveStraight(currentLoc,nextLoc)
-            print(self.currentLocation)
+            success = self.moveStraight(nextLoc)
+            print("CURRENTLOC" ,self.currentLocation)
 
-            if (success) : currentLocIndex += 1
+            if (success) : nextLocIndex += 1
             else :
-                rospy.loginfo("not successful")
+                print("not suscces")
                 return False
         
         # need to spin to change heading to goal heading
-        self.spin(self.goal)
+        self.spin(self.goal.angle)
+
+        print("finished main loop")
         
         return True
     
     def moveStraight(self,target):
         
         objectDetected = self.scanObstacleUS()
- 
-        while ( not objectDetected or not self.checkReachTarget(target)):
-
-            # TODO : integrate ros movement
-            if (not rospy.is_shutdown()):
-                self.twist.linear.x = 1.0
-                self.twist.angular.z = 0
-                self.cmdvel_pub.publish(self.twist)
+        print("moving straight")
+        while (not self.closeTo(target)):
+   
+            self.twist.linear.x = 0.3
+            self.twist.angular.z = 0
+            self.cmdvel_pub.publish(self.twist)
                                       
             objectDetected = self.scanObstacleUS()
+            if objectDetected : break
 
-            self.rate.sleep()  
+            #self.rate.sleep()  
             
-        
+        self.stop()
+
+        print("stopped")
         if objectDetected :
             # self.motorDriver.motorStop()
             # go to Contingency
-            self.stop()
+            
             self.contigency = Contingency()
 
         
@@ -154,28 +167,48 @@ class LocalPlanner():
         # rospy.loginfo(hello_str)
         self.cmdvel_pub.publish(self.twist)
 
+    def closeToHeading(self,target_heading):
+        return abs(self.currentHeading-target_heading) <= self.degreeTolerance
+
     def spin(self,target_heading):
         
-        heading_difference = float("inf")
+        print("CURRENT:" , self.currentHeading , " TARG: " , target_heading)
         # self.currentHeading != target_heading
-        while(heading_difference >= 0.5):
+        while(not self.closeToHeading(target_heading)):
             # if heading_difference below 180, target is to the left; above 180, target to the right
             heading_difference = (target_heading - self.currentHeading) % 360
             
             self.twist.linear.x = 0
 
             if heading_difference < 180:
-                self.twist.angular.z = 0.1
+                self.twist.angular.z = 0.3
             else:
-                self.twist.angular.z = -0.1
+                self.twist.angular.z = 0.3
 
             self.cmdvel_pub.publish(self.twist)
 
-            print(heading_difference)
+            #print("CUR:" , self.currentHeading , " targ:" ,target_heading)
         
         self.stop()
 
+    def true_bearing(self,loc1,loc2):
+        startLat = math.radians(loc1.lat)
+        startLong = math.radians(loc1.long)
+        endLat = math.radians(loc2.lat)
+        endLong = math.radians(loc2.long)
 
+        dLong = endLong - startLong
+
+        dPhi = math.log(math.tan(endLat/2.0+math.pi/4.0)/math.tan(startLat/2.0+math.pi/4.0))
+        if abs(dLong) > math.pi:
+            if dLong > 0.0:
+                dLong = -(2.0 * math.pi - dLong)
+            else:
+                dLong = (2.0 * math.pi + dLong)
+
+        bearing = (math.degrees(math.atan2(dLong, dPhi)) + 360.0) % 360.0
+
+        return bearing
 
 
 
