@@ -22,20 +22,18 @@ def consecutive_values(input_list):
 class Contingency:
 
     def __init__(self, triggerDistance, LocalPlanner):
+        
         self.obstacles = [True for i in range(6)]  # a list of booleans which indicate where the obstacles are
         # self.motorDriver = MotorDriver()
         self.triggerDistance = triggerDistance
         self.closestGap = None
         self.lp = LocalPlanner
 
-        rospy.Subscriber("sensor_state", Robot_Sensor_State, self.parse_sensor_state)
-        rospy.Subscriber('bench1/gps_pos', Point, self.updateLocation)
-
         self.cmdvel_pub = rospy.Publisher('cmd_vel', Twist , queue_size=10)
 
     # this method fills 'obstacles' so that we know where they are
     def spin(self):
-        lastheading = self.lp.currentheading
+        lastheading = self.lp.currentHeading
         # can it spin by 1 degree to obtain 360 values
         for heading in range(360):
             self.twist.angular.z = 0.3

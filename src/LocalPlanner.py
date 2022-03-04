@@ -21,8 +21,8 @@ class LocalPlanner():
 
         self.usDistTolerance = 0.40
 
-        self.distanceTolerance = 0.2
-        self.degreeTolerance = 0.5
+        self.distanceTolerance = 0.1
+        self.degreeTolerance = 0.3
        
 
         self.twist = Twist()
@@ -59,7 +59,7 @@ class LocalPlanner():
     def parse_sensor_state(self,data):
         
         self.currentHeading = data.compass.heading
-        self.usReading = data.ultrasonic.distance
+        self.usReading = data.ultrasonic.distance # only the front need 3 more readings
 
         #rospy.loginfo("heading: " + str(self.currentHeading) + " us_d: " + str(self.usReading))
 
@@ -92,14 +92,14 @@ class LocalPlanner():
             print(nextLoc)
             #next_heading = self.calculateTargetHeading(nextLoc)
             next_heading = self.true_bearing(self.currentLocation,nextLoc)
-
+            
             self.spin(next_heading)
             success = self.moveStraight(nextLoc)
             print("CURRENTLOC" ,self.currentLocation)
 
             if (success) : nextLocIndex += 1
             else :
-                print("not susccess")
+                print("not success")
                 return False
         
         # need to spin to change heading to goal heading
@@ -115,7 +115,7 @@ class LocalPlanner():
         print("moving straight")
         while (not self.closeTo(target)):
    
-            self.twist.linear.x = 0.3
+            self.twist.linear.x = 0.2
             self.twist.angular.z = 0
             self.cmdvel_pub.publish(self.twist)
                                       
@@ -130,8 +130,8 @@ class LocalPlanner():
         if objectDetected :
             # self.motorDriver.motorStop()
             # go to Contingency
-            
-            self.contigency = Contingency()
+            print("Object DETECTED")
+            self.contigency = Contingency(self.usDistTolerance,self)
 
         
         if self.checkReachTarget(target) : 
@@ -176,14 +176,14 @@ class LocalPlanner():
         # self.currentHeading != target_heading
         while(not self.closeToHeading(target_heading)):
             # if heading_difference below 180, target is to the left; above 180, target to the right
-            heading_difference = (target_heading - self.currentHeading) % 360
+            heading_difference = self.currentHeading-target_heading #(target_heading - self.currentHeading) % 360
             
             self.twist.linear.x = 0
 
-            if heading_difference < 180:
-                self.twist.angular.z = 0.3
+            if heading_difference > 0:
+                self.twist.angular.z = 0.1
             else:
-                self.twist.angular.z = 0.3
+                self.twist.angular.z = -0.1
 
             self.cmdvel_pub.publish(self.twist)
 
