@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import math
 from re import S
@@ -22,10 +22,11 @@ class LocalPlanner():
 
         self.usDistTolerance = 0.40
 
-        self.distanceTolerance = 0.1
-        self.degreeTolerance = 0.3
-        
-        self.LINEAR_SPEED = 0.05
+        self.distanceTolerance = 50
+        self.degreeTolerance = 5
+
+        self.LINEAR_SPEED = 120
+        self.ANGULAR_SPEED = 100
         
 
         self.twist = Twist()
@@ -36,11 +37,11 @@ class LocalPlanner():
         # rospy.init_node('local_planner', anonymous=True)
         #rospy.Subscriber("chatter",String,self.callback) # just a test node
 
-        rospy.Subscriber("sensor_state", Robot_Sensor_State, self.parse_sensor_state)
-        rospy.Subscriber('bench1/gps_pos', Point, self.updateLocation)
+        rospy.Subscriber("/bench_sensor_state", Robot_Sensor_State, self.parse_sensor_state)
+        rospy.Subscriber("/robot_position", Point, self.updateLocation)
 
-        self.cmdvel_pub = rospy.Publisher('cmd_vel', Twist , queue_size=10)
-        #self.rate = rospy.Rate(50) # 10hz
+        self.cmdvel_pub = rospy.Publisher('cmd_vel', Twist , queue_size=1)
+        self.rate = rospy.Rate(50) # 5hz
     
 
 #    def callback(self,data):
@@ -81,7 +82,7 @@ class LocalPlanner():
         p1_point = [p1.long,p1.lat]
         p2_point = [p2.long,p2.lat]
 
-        #print("DISTANCE: " ,math.dist(p1_point,p2_point))
+        print("DISTANCE: " ,math.dist(p1_point,p2_point))
         return math.dist(p1_point,p2_point) <= self.distanceTolerance
 
     def execute_mainflow(self):
@@ -98,7 +99,7 @@ class LocalPlanner():
             #next_heading = self.calculateTargetHeading(nextLoc)
             next_heading = self.true_bearing(self.currentLocation,nextLoc)
             
-            self.spin(next_heading)
+            #self.spin(next_heading)
             success = self.moveStraight(nextLoc)
             print("CURRENTLOC" ,self.currentLocation)
 
@@ -108,7 +109,7 @@ class LocalPlanner():
                 return False
         
         # need to spin to change heading to goal heading
-        self.spin(self.goal.angle)
+        #self.spin(self.goal.angle)
 
         print("finished main loop")
         
@@ -127,7 +128,7 @@ class LocalPlanner():
             objectDetected = self.scanObstacleUS()
             if objectDetected : break
 
-            #self.rate.sleep()  
+            self.rate.sleep()  
             
         self.stop()
 
@@ -191,9 +192,9 @@ class LocalPlanner():
             self.twist.linear.x = 0
 
             if heading_difference < 180:
-                self.twist.angular.z = -0.1
+                self.twist.angular.z = -self.ANGULAR_SPEED
             else:
-                self.twist.angular.z = 0.1
+                self.twist.angular.z = self.ANGULAR_SPEED
 
             self.cmdvel_pub.publish(self.twist)
 
