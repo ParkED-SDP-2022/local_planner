@@ -24,7 +24,7 @@ class Contingency:
     def __init__(self, triggerDistance, LocalPlanner):
         
         print("Contingency plan initiated")
-        self.obstacles = [True for i in range(6)]  # a list of booleans which indicate where the obstacles are
+        self.obstacles = [True for i in range(360)]  # a list of booleans which indicate where the obstacles are
         self.triggerDistance = triggerDistance
         self.closestGap = None
         self.lp = LocalPlanner
@@ -40,15 +40,31 @@ class Contingency:
     
     def scanAround(self):
         lastheading = self.lp.currentHeading
+        countChanges = 0
+
+        outOfLastHeading = False
+        self.lp.stop()
         # can it spin by 1 degree to obtain 360 values
-        for heading in range(360):
+        
+        #for heading in range(0,360):
+        while True:    
+            self.lp.twist.linear.x = 0
             self.lp.twist.angular.z = 0.3
+
             self.cmdvel_pub.publish(self.lp.twist)
             if(self.lp.currentHeading == 1 + lastheading):
                 self.lp.stop()
             if self.lp.usReading < 0.4:
-                self.obstacles[round(self.lp.currentHeading + heading)] = True
-            lastheading = self.lp.currentHeading
+                self.obstacles[round(self.lp.currentHeading) % 360] = True
+                countChanges += 1
+            
+            if (not self.lp.closeToHeading(lastheading)):
+                outOfLastHeading = True
+            if (outOfLastHeading and self.lp.closeToHeading(lastheading)):
+                break
+        
+        print(countChanges)
+        self.lp.stop()
 
     def find_gap(self):
         # find the gap clockwise

@@ -24,12 +24,15 @@ class LocalPlanner():
 
         self.distanceTolerance = 0.1
         self.degreeTolerance = 0.3
-       
+        
+        self.LINEAR_SPEED = 0.05
+        
 
         self.twist = Twist()
         self.init_twist()
         
         self.contigency = Contingency(self.usDistTolerance,self)
+
         # rospy.init_node('local_planner', anonymous=True)
         #rospy.Subscriber("chatter",String,self.callback) # just a test node
 
@@ -117,7 +120,7 @@ class LocalPlanner():
         print("moving straight")
         while (not self.closeTo(target)):
    
-            self.twist.linear.x = 0.2
+            self.twist.linear.x = self.LINEAR_SPEED
             self.twist.angular.z = 0
             self.cmdvel_pub.publish(self.twist)
                                       
@@ -134,6 +137,8 @@ class LocalPlanner():
             # go to Contingency
             print("Object DETECTED")
             avoided = self.contigency.execute_cont_plan()
+
+            print("finished conti")
             return avoided
 
         
