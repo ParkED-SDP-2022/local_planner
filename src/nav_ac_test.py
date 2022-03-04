@@ -65,7 +65,7 @@ def navigate_client():
     # listening for goals.
     client.wait_for_server()
 
-    testPath = dummyPathNoObs()
+    testPath = dummyPathWithObs()
     # Creates a goal to send to the action server.
     goal = NavigateGoal(destination = dummyDest(),path = testPath)
     

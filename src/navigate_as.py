@@ -35,6 +35,7 @@ class ActionServer(object):
 
         success = self.local_plan.execute_mainflow()
         
+        self._result.success = success
         if success:
             self._as.set_succeeded(self._result)
 
