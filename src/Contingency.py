@@ -47,7 +47,7 @@ class Contingency:
             if(self.lp.currentHeading == 1 + lastheading):
                 self.lp.stop()
             if self.lp.usReading < 0.4:
-                self.obstacles[self.lp.currentHeading + heading] = True
+                self.obstacles[round(self.lp.currentHeading + heading)] = True
             lastheading = self.lp.currentHeading
 
     def find_gap(self):
