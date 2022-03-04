@@ -69,13 +69,6 @@ def navigate_client():
     # Creates a goal to send to the action server.
     goal = NavigateGoal(destination = dummyDest(),path = testPath)
     
-   
-
-    
-    ###########################################
-    ##### goal.Path not goal.path [CAPS] ######
-    ###########################################
-
     #goal.path = dummyPath()
     #goal.destination = dummyDest()
 
