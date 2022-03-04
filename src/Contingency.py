@@ -24,22 +24,20 @@ class Contingency:
     def __init__(self, triggerDistance, LocalPlanner):
         
         self.obstacles = [True for i in range(6)]  # a list of booleans which indicate where the obstacles are
-        # self.motorDriver = MotorDriver()
         self.triggerDistance = triggerDistance
         self.closestGap = None
         self.lp = LocalPlanner
 
         self.cmdvel_pub = rospy.Publisher('cmd_vel', Twist , queue_size=10)
 
-    # this method fills 'obstacles' so that we know where they are
     def spin(self):
         lastheading = self.lp.currentHeading
         # can it spin by 1 degree to obtain 360 values
         for heading in range(360):
-            self.twist.angular.z = 0.3
+            self.lp.twist.angular.z = 0.3
             self.cmdvel_pub.publish(self.twist)
             if(self.lp.currentheading == 1 + lastheading):
-                self.stop()
+                self.lp.stop()
             if self.lp.usReading < 0.4:
                 self.obstacles[self.lp.currentheading + heading] = True
             lastheading = self.lp.currentheading
@@ -69,11 +67,11 @@ class Contingency:
         else:
             deg = targetheading
         distance = 0.4 / math.cos(math.radians(deg))
-        self.twist.linear.x = 0.3
-        self.twist.angular.z = 0
-        self.cmdvel_pub.publish(self.twist)
+        self.lp.twist.linear.x = 0.3
+        self.lp.twist.angular.z = 0
+        self.cmdvel_pub.publish(self.lp.twist)
         self.rest(distance/0.3)
-        self.stop()
+        self.lp.stop()
     
 
     def rest(self, t):
