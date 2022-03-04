@@ -58,9 +58,9 @@ class LocalPlanner():
 
     def parse_sensor_state(self,data):
         
-        self.currentHeading = data.compass.heading
-        self.usReading = data.ultrasonic.distance # only the front need 3 more readings
-
+        self.currentHeading = data.heading.heading
+        self.usReading = data.ultrasonicFront.distance # only the front need 3 more readings
+        self.usReadingBack = data.ultrasonicBack.distance
         #rospy.loginfo("heading: " + str(self.currentHeading) + " us_d: " + str(self.usReading))
 
     # update current location
@@ -172,24 +172,28 @@ class LocalPlanner():
 
     def spin(self,target_heading):
         
+        if (target_heading == -999): return True
         print("CURRENT:" , self.currentHeading , " TARG: " , target_heading)
         # self.currentHeading != target_heading
         while(not self.closeToHeading(target_heading)):
             # if heading_difference below 180, target is to the left; above 180, target to the right
-            heading_difference = self.currentHeading-target_heading #(target_heading - self.currentHeading) % 360
+            #self.currentHeading-target_heading 
+            heading_difference = (target_heading - self.currentHeading) % 360
             
             self.twist.linear.x = 0
 
-            if heading_difference > 0:
-                self.twist.angular.z = 0.1
-            else:
+            if heading_difference < 180:
                 self.twist.angular.z = -0.1
+            else:
+                self.twist.angular.z = 0.1
 
             self.cmdvel_pub.publish(self.twist)
 
             #print("CUR:" , self.currentHeading , " targ:" ,target_heading)
         
         self.stop()
+
+        return True
 
     def true_bearing(self,loc1,loc2):
         startLat = math.radians(loc1.lat)

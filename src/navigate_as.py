@@ -26,7 +26,7 @@ class ActionServer(object):
         success = True
 
         goal_pos = goal.destination
-        path = goal.Path
+        path = goal.path
 
         self._as.publish_feedback(self._feedback)
 

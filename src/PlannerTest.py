@@ -60,7 +60,10 @@ print(target_heading(loc3,loc1))
 
 def heading_difference(c,t):
     heading_difference = (t - c) % 360
-    return heading_difference
+
+    if (heading_difference < 180) : return "LEFT"
+    else: return "RIGHT"
+    #return heading_difference
 
 # target to the right
 print("Right-hand target:")
@@ -72,3 +75,6 @@ print("Left-hand target:")
 print(heading_difference(350,10))
 print(heading_difference(300,350))
 print(heading_difference(10,180))
+
+
+print(heading_difference(80,10))

@@ -31,11 +31,18 @@ class SensorSimulation:
     def publish(self):
 
         us_readings = self.scan.ranges
-        us_value = 0
-        if (len(us_readings) > 0 ): us_value = us_readings[0]
+        us_value = float('inf')
+        us_back_val = float('inf')
+        if (len(us_readings) > 0 ): 
+            us_value = us_readings[0]
+            us_back_val = us_readings[180]
 
-        us = Ultrasonic_Sensor()
-        us.distance = us_value
+        us_front = Ultrasonic_Sensor()
+        us_front.distance = us_value
+
+        us_back = Ultrasonic_Sensor()
+        us_back.distance = us_back_val
+
 
         (roll, pitch, yaw) = euler_from_quaternion([self.odom.pose.pose.orientation.x, self.odom.pose.pose.orientation.y, 
             self.odom.pose.pose.orientation.z, self.odom.pose.pose.orientation.w])
@@ -56,8 +63,10 @@ class SensorSimulation:
         compass.heading = heading
 
         sensor_data = Robot_Sensor_State()
-        sensor_data.compass = compass
-        sensor_data.ultrasonic = us
+        sensor_data.heading = compass
+        sensor_data.ultrasonicFront = us_front
+        sensor_data.ultrasonicBack = us_back
+
 
         self.sensor_pub.publish(sensor_data)
 
