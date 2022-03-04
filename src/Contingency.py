@@ -35,12 +35,11 @@ class Contingency:
         # can it spin by 1 degree to obtain 360 values
         for heading in range(360):
             self.lp.twist.angular.z = 0.3
-            self.cmdvel_pub.publish(self.twist)
+            self.cmdvel_pub.publish(self.lp.twist)
             if(self.lp.currentheading == 1 + lastheading):
                 self.lp.stop()
             if self.lp.usReading < 0.4:
-                self.obstacles[self.lp.currentheading + heading] = True
-            lastheading = self.lp.currentheading
+                self.obstacles[round(self.lp.currentheading + heading)] = True
 
     def find_gap(self):
         # find the gap clockwise
