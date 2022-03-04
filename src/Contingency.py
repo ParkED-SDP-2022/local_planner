@@ -23,6 +23,7 @@ class Contingency:
 
     def __init__(self, triggerDistance, LocalPlanner):
         
+        print("Contingency plan initiated")
         self.obstacles = [True for i in range(6)]  # a list of booleans which indicate where the obstacles are
         self.triggerDistance = triggerDistance
         self.closestGap = None
@@ -30,16 +31,24 @@ class Contingency:
 
         self.cmdvel_pub = rospy.Publisher('cmd_vel', Twist , queue_size=10)
 
-    def spin(self):
+    def execute_cont_plan(self):
+        self.scanAround()
+        self.find_gap()
+        self.go()
+
+        return True
+    
+    def scanAround(self):
         lastheading = self.lp.currentHeading
         # can it spin by 1 degree to obtain 360 values
         for heading in range(360):
             self.lp.twist.angular.z = 0.3
             self.cmdvel_pub.publish(self.lp.twist)
-            if(self.lp.currentheading == 1 + lastheading):
+            if(self.lp.currentHeading == 1 + lastheading):
                 self.lp.stop()
             if self.lp.usReading < 0.4:
-                self.obstacles[round(self.lp.currentheading + heading)] = True
+                self.obstacles[self.lp.currentHeading + heading] = True
+            lastheading = self.lp.currentHeading
 
     def find_gap(self):
         # find the gap clockwise

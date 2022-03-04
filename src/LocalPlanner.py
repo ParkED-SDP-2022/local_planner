@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import math
+from re import S
 from Contingency import Contingency
 import rospy
 from parked_custom_msgs.msg import Point, Robot_Sensor_State
@@ -11,7 +12,7 @@ class LocalPlanner():
 
     def __init__(self):
         ## we need the state for our robots
-        print("success")
+        print("Local planner initiated")
         self.goal = None
         self.globalPath = None
         
@@ -27,7 +28,8 @@ class LocalPlanner():
 
         self.twist = Twist()
         self.init_twist()
-
+        
+        self.contigency = Contingency(self.usDistTolerance,self)
         # rospy.init_node('local_planner', anonymous=True)
         #rospy.Subscriber("chatter",String,self.callback) # just a test node
 
@@ -131,7 +133,8 @@ class LocalPlanner():
             # self.motorDriver.motorStop()
             # go to Contingency
             print("Object DETECTED")
-            self.contigency = Contingency(self.usDistTolerance,self)
+            avoided = self.contigency.execute_cont_plan()
+            return avoided
 
         
         if self.checkReachTarget(target) : 
