@@ -22,10 +22,11 @@ class LocalPlanner():
 
         self.usDistTolerance = 0.5
 
-        self.distanceTolerance = 0.1
+        self.distanceTolerance = 0.2
         self.degreeTolerance = 0.3
         
-        self.LINEAR_SPEED = 0.1
+        self.LINEAR_SPEED = 0.3
+        self.ANGULAR_SPEED = 0.1
         
 
         self.twist = Twist()
@@ -62,7 +63,8 @@ class LocalPlanner():
         self.twist.angular.z = 0.0
 
     def parse_sensor_state(self,data):
-        
+
+        ## if ultrasonic too close it value will be very high
         self.currentHeading = data.heading.heading
         self.usReading = data.ultrasonicFront.distance # only the front need 3 more readings
         self.usReadingBack = data.ultrasonicBack.distance
@@ -98,7 +100,7 @@ class LocalPlanner():
             #next_heading = self.calculateTargetHeading(nextLoc)
             next_heading = self.true_bearing(self.currentLocation,nextLoc)
             
-            #self.spin(next_heading)
+            self.spin(next_heading)
             success = self.moveStraight(nextLoc)
             print("CURRENTLOC" ,self.currentLocation)
 
@@ -108,7 +110,7 @@ class LocalPlanner():
                 return False
         
         # need to spin to change heading to goal heading
-        #self.spin(self.goal.angle)
+        self.spin(self.goal.angle)
 
         print("finished main loop")
         
