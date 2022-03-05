@@ -20,7 +20,7 @@ class SensorSimulation:
 
         rospy.Subscriber("/scan",LaserScan,self.subscribeScan)
         rospy.Subscriber("/odom",Odometry,self.subscribeOdom)
-        self.sensor_pub = rospy.Publisher('/sensor_state',Robot_Sensor_State,queue_size=10)
+        self.sensor_pub = rospy.Publisher('/bench_sensor_state',Robot_Sensor_State,queue_size=10)
 
         self.publish_loop()
 

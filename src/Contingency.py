@@ -13,8 +13,8 @@ def consecutive_values(input_list):
             count += 1
         else:
             count = 0
-        if count == 40:
-            return n - 39
+        if count == 80:
+            return n - 79
         n = (n + 1) % len(input_list)
     return -1
 
@@ -40,31 +40,33 @@ class Contingency:
     
     def scanAround(self):
         lastheading = self.lp.currentHeading
-        countChanges = 0
+        # countChanges = 0
 
         outOfLastHeading = False
         self.lp.stop()
-        # can it spin by 1 degree to obtain 360 values
-        
-        #for heading in range(0,360):
-        while True:    
+
+        counter = 0
+        current_heading = round(self.lp.currentHeading)
+        while (counter<360):    
             self.lp.twist.linear.x = 0
             self.lp.twist.angular.z = 0.3
 
             self.cmdvel_pub.publish(self.lp.twist)
-            if(self.lp.currentHeading == 1 + lastheading):
+            if(self.lp.currentHeading.closeToHeading(current_heading+1)):
                 self.lp.stop()
-            if self.lp.usReading < 0.4:
-                self.obstacles[round(self.lp.currentHeading) % 360] = True
-                countChanges += 1
+            if self.lp.usReading < 0.8:
+                self.obstacles[current_heading % 360] = True
+                # countChanges += 1
             
             if (not self.lp.closeToHeading(lastheading)):
                 outOfLastHeading = True
             if (outOfLastHeading and self.lp.closeToHeading(lastheading)):
                 break
+            counter += 1
+            current_heading = (current_heading + 1) % 360
         
-        print(countChanges)
         self.lp.stop()
+
 
     def find_gap(self):
         # find the gap clockwise
@@ -73,7 +75,7 @@ class Contingency:
         # find the gap anti-clockwise
         gap2 = consecutive_values(self.obstacles[::1])
 
-        # this returns the gap closest to 0 degrees
+        # this returns the gap 1closest to 0 degrees
         if gap2 < gap1:
             self.closestGap = 360 - consecutive_values(self.obstacles[::1])
         else:
@@ -82,19 +84,19 @@ class Contingency:
     def go(self):
         # this finds the target heading for set target heading
         if self.closestGap > 180:
-            targetheading = self.closestGap - 20
+            targetheading = self.closestGap - 40
         else:
-            targetheading = self.closestGap + 20
+            targetheading = self.closestGap + 40
         # this provides parameter for distance calculation
         if targetheading > 180:
             deg = 360 - targetheading
         else:
             deg = targetheading
-        distance = 0.4 / math.cos(math.radians(deg))
+        distance = 0.8 / math.cos(math.radians(deg))
         self.lp.twist.linear.x = 0.3
         self.lp.twist.angular.z = 0
         self.cmdvel_pub.publish(self.lp.twist)
-        self.rest(distance/0.3)
+        self.rest(distance/0.8)
         self.lp.stop()
     
 

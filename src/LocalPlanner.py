@@ -25,7 +25,7 @@ class LocalPlanner():
         self.distanceTolerance = 0.1
         self.degreeTolerance = 0.3
         
-        self.LINEAR_SPEED = 0.05
+        self.LINEAR_SPEED = 0.3
         
 
         self.twist = Twist()
@@ -36,8 +36,8 @@ class LocalPlanner():
         # rospy.init_node('local_planner', anonymous=True)
         #rospy.Subscriber("chatter",String,self.callback) # just a test node
 
-        rospy.Subscriber("sensor_state", Robot_Sensor_State, self.parse_sensor_state)
-        rospy.Subscriber('bench1/gps_pos', Point, self.updateLocation)
+        rospy.Subscriber("/bench_sensor_state", Robot_Sensor_State, self.parse_sensor_state)
+        rospy.Subscriber('/robot_position', Point, self.updateLocation)
 
         self.cmdvel_pub = rospy.Publisher('cmd_vel', Twist , queue_size=10)
         #self.rate = rospy.Rate(50) # 10hz
@@ -138,7 +138,7 @@ class LocalPlanner():
             print("Object DETECTED")
             avoided = self.contigency.execute_cont_plan()
 
-            print("finished conti")
+            print("finished cont")
             return avoided
 
         

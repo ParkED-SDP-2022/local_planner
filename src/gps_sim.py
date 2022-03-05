@@ -14,7 +14,7 @@ class OdomToGPSConverter:
     def __init__(self):
 
         rospy.Subscriber("/odom",Odometry,self.subscribe)
-        self.gps_pub = rospy.Publisher('bench1/gps_pos',Point,queue_size=10)
+        self.gps_pub = rospy.Publisher('/robot_position',Point,queue_size=10)
 
         rospy.spin()
 
