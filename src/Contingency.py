@@ -24,10 +24,13 @@ class Contingency:
     def __init__(self, triggerDistance, LocalPlanner):
         
         print("Contingency plan initiated")
+        
         self.obstacles = [False for i in range(360)]  # a list of booleans which indicate where the obstacles are
+        self.virtual_obstacles = []
         self.triggerDistance = triggerDistance
         self.closestGap = None
         self.lp = LocalPlanner
+        self.ch = self.lp.currentHeading
         self.usDistTolerance = 0.7
 
         self.cmdvel_pub = rospy.Publisher('cmd_vel', Twist , queue_size=10)
@@ -76,31 +79,36 @@ class Contingency:
         # for i in range(0,360):
         #     print('the element in ' ,i, 'th position is ' ,self.obstacles[i])
         self.lp.stop()
+        
         print('scanAround stopped!!!!!!!!!!!!!!!!!!')
 
 
     def find_gap(self):
-        print('gap is found!!!!!!!!!!')
+        self.virtual_obstacles = [*self.obstacles[self.ch,359], *self.obstacles[0,self.ch]]
+        print(self.virtual_obstacles)
+        
         # find the gap clockwise
-        gap1 = consecutive_values(self.obstacles)
+        gap1 = consecutive_values(self.virtual_obstacles)
 
         # find the gap anti-clockwise
-        gap2 = consecutive_values(self.obstacles[::1])
+        gap2 = consecutive_values(self.virtual_obstacles[::1])
 
-        # this returns the gap 1closest to 0 degrees
+        # this returns the gap closest to 0 degrees
         if gap2 < gap1:
-            self.closestGap = 360 - consecutive_values(self.obstacles[::1])
+            self.closestGap = 360 - consecutive_values(self.virtual_obstacles[::1])
         else:
             self.closestGap = gap1
+        print('gap is found!!!!!!!!!!')
         print(self.closestGap)
+        
 
     def go(self):
-        print('go!!!!!!!!!!!1!!!!!!')
+        print('go!!!!!!!!!!!!!!!!!')
         # this finds the target heading for set target heading
         if self.closestGap > 180:
-            targetheading = self.closestGap - 20
+            targetheading = self.closestGap - 20 + self.ch
         else:
-            targetheading = self.closestGap + 20
+            targetheading = self.closestGap + 20 + self.ch
         # this provides parameter for distance calculation
         if targetheading > 180:
             deg = 360 - targetheading
