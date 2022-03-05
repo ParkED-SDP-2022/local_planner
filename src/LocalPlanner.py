@@ -20,12 +20,12 @@ class LocalPlanner():
         self.currentHeading = 0
         self.usReading = float('inf')
 
-        self.usDistTolerance = 0.40
+        self.usDistTolerance = 0.5
 
         self.distanceTolerance = 0.1
         self.degreeTolerance = 0.3
         
-        self.LINEAR_SPEED = 0.3
+        self.LINEAR_SPEED = 0.1
         
 
         self.twist = Twist()
@@ -128,11 +128,11 @@ class LocalPlanner():
             if objectDetected : break
 
             #self.rate.sleep()  
-            
+    
         self.stop()
 
         print("stopped")
-        if objectDetected :
+        while(objectDetected) :
             # self.motorDriver.motorStop()
             # go to Contingency
             print("Object DETECTED")

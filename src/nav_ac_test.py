@@ -61,9 +61,11 @@ def navigate_client():
     # (FibonacciAction) to the constructor.
     client = actionlib.SimpleActionClient('bench_x_local_planner', NavigateAction)
 
+    print("wait for server")
     # Waits until the action server has started up and started
     # listening for goals.
     client.wait_for_server()
+    print("after")
 
     testPath = dummyPathWithObs()
     # Creates a goal to send to the action server.

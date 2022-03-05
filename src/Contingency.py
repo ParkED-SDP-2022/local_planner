@@ -3,7 +3,7 @@ import time
 import rospy
 from parked_custom_msgs.msg import Point, Robot_Sensor_State
 from geometry_msgs.msg import Twist
-
+import sys 
 # find the gap by figuring out the first consecutive 40 false which indicate where the gap is.
 def consecutive_values(input_list):
     n = 0
@@ -13,8 +13,8 @@ def consecutive_values(input_list):
             count += 1
         else:
             count = 0
-        if count == 80:
-            return n - 79
+        if count == 40:
+            return n - 39
         n = (n + 1) % len(input_list)
     return -1
 
@@ -24,10 +24,11 @@ class Contingency:
     def __init__(self, triggerDistance, LocalPlanner):
         
         print("Contingency plan initiated")
-        self.obstacles = [True for i in range(360)]  # a list of booleans which indicate where the obstacles are
+        self.obstacles = [False for i in range(360)]  # a list of booleans which indicate where the obstacles are
         self.triggerDistance = triggerDistance
         self.closestGap = None
         self.lp = LocalPlanner
+        self.usDistTolerance = 0.7
 
         self.cmdvel_pub = rospy.Publisher('cmd_vel', Twist , queue_size=10)
 
@@ -35,40 +36,51 @@ class Contingency:
         self.scanAround()
         self.find_gap()
         self.go()
+        sys.exit('exit!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
 
         return True
     
     def scanAround(self):
-        lastheading = self.lp.currentHeading
+        lastheading = round(self.lp.currentHeading)
         # countChanges = 0
+        print('scanAround started!!!!!!!!!!!!!!')
+        print('----------------------')
 
         outOfLastHeading = False
         self.lp.stop()
+        print(self.obstacles)
 
+        scanned = [False for i in range(0,360)]
         counter = 0
         current_heading = round(self.lp.currentHeading)
-        while (counter<360):    
+        while not all(scanned): 
+
             self.lp.twist.linear.x = 0
             self.lp.twist.angular.z = 0.3
-
+            current_heading = round(self.lp.currentHeading)
             self.cmdvel_pub.publish(self.lp.twist)
-            if(self.lp.currentHeading.closeToHeading(current_heading+1)):
+            if(self.lp.closeToHeading(current_heading+1)):
                 self.lp.stop()
-            if self.lp.usReading < 0.8:
+            if self.lp.usReading < self.usDistTolerance:
                 self.obstacles[current_heading % 360] = True
                 # countChanges += 1
             
-            if (not self.lp.closeToHeading(lastheading)):
-                outOfLastHeading = True
-            if (outOfLastHeading and self.lp.closeToHeading(lastheading)):
-                break
             counter += 1
-            current_heading = (current_heading + 1) % 360
-        
+            #current_heading = (current_heading + 1) % 360
+            scanned[current_heading % 360] = True
+            true_count = sum(scanned)
+            
+            print(true_count)
+
+        print(self.obstacles)
+        # for i in range(0,360):
+        #     print('the element in ' ,i, 'th position is ' ,self.obstacles[i])
         self.lp.stop()
+        print('scanAround stopped!!!!!!!!!!!!!!!!!!')
 
 
     def find_gap(self):
+        print('gap is found!!!!!!!!!!')
         # find the gap clockwise
         gap1 = consecutive_values(self.obstacles)
 
@@ -80,23 +92,25 @@ class Contingency:
             self.closestGap = 360 - consecutive_values(self.obstacles[::1])
         else:
             self.closestGap = gap1
+        print(self.closestGap)
 
     def go(self):
+        print('go!!!!!!!!!!!1!!!!!!')
         # this finds the target heading for set target heading
         if self.closestGap > 180:
-            targetheading = self.closestGap - 40
+            targetheading = self.closestGap - 20
         else:
-            targetheading = self.closestGap + 40
+            targetheading = self.closestGap + 20
         # this provides parameter for distance calculation
         if targetheading > 180:
             deg = 360 - targetheading
         else:
             deg = targetheading
-        distance = 0.8 / math.cos(math.radians(deg))
+        distance = self.usDistTolerance / math.cos(math.radians(deg))
         self.lp.twist.linear.x = 0.3
         self.lp.twist.angular.z = 0
         self.cmdvel_pub.publish(self.lp.twist)
-        self.rest(distance/0.8)
+        self.rest(abs(distance/self.usDistTolerance))
         self.lp.stop()
     
 
