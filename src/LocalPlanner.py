@@ -25,7 +25,7 @@ class LocalPlanner():
         self.distanceTolerance = 0.2
         self.degreeTolerance = 0.3
         
-        self.LINEAR_SPEED = 0.3
+        self.LINEAR_SPEED = 0.1
         self.ANGULAR_SPEED = 0.1
         
 
