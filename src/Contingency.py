@@ -158,6 +158,10 @@ class Contingency:
         
 
     def go(self):
+
+        ## TODO : need to check if it detects an object then stop moving 
+        # maybe better to pass it to the main flow after we get spin to the heading
+        
         print('go!!!!!!!!!!!!!!!!!')
         # this finds the target heading for set target heading
         if self.closestGap > 180:

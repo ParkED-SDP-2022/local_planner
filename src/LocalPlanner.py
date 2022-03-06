@@ -16,6 +16,8 @@ class LocalPlanner():
         self.goal = None
         self.globalPath = None
         
+        self.LEFT_RIGHT_SENSOR = False
+
         self.currentLocation = Point()
         self.currentHeading = 0
         self.usReading = float('inf')
@@ -224,7 +226,8 @@ class LocalPlanner():
 
         return bearing
 
-
-
+    # TODO : call global planner
+    def callGlobalPlanner(self,currentNode, obstacleNode):
+        pass
 
 
