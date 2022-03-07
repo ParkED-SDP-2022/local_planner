@@ -18,8 +18,8 @@ class LocalPlanner():
         self.goal = None
         self.globalPath = None
         
-        self.LEFT_RIGHT_SENSOR = False
-
+        #self.LEFT_RIGHT_SENSOR = False
+        
         self.currentLocation = Point()
         self.currentHeading = 0
         self.usReading = float('inf')
@@ -116,8 +116,11 @@ class LocalPlanner():
             print("CURRENTLOC" ,self.currentLocation)
 
             if (not success and self.objectDetected):
-                nextLocIndex = 0
-                self.objectDetected = False # reset the object detected
+
+                self.callGlobalPlanner(nextLoc) # update new path
+                nextLocIndex = 0 # start from new with new global path
+                self.objectDetected = False # reset the object detected boolean
+
             if (success) : nextLocIndex += 1
             else :
                 print("not success")
@@ -241,7 +244,6 @@ class LocalPlanner():
 
         return bearing
 
-    # TODO : call global planner
     def callGlobalPlanner(self, obstacleNode):
 
         currentNode = self.getCurrentNode(obstacleNode)
