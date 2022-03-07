@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from calendar import c
 import math
 from re import S
 from Contingency import Contingency
@@ -7,6 +8,7 @@ import rospy
 from parked_custom_msgs.msg import Point, Robot_Sensor_State
 from geometry_msgs.msg import Twist
 from std_msgs.msg import String
+from globalPlannerClient import GlobalPlannerClient
 
 class LocalPlanner():
 
@@ -35,7 +37,8 @@ class LocalPlanner():
         self.twist = Twist()
         self.init_twist()
         
-        self.contigency = Contingency(self.usDistStop,self)
+        # self.contigency = Contingency(self.usDistStop,self)
+        self.globalPlannerClient = GlobalPlannerClient()
 
         # rospy.init_node('local_planner', anonymous=True)
         #rospy.Subscriber("chatter",String,self.callback) # just a test node
@@ -69,10 +72,12 @@ class LocalPlanner():
 
         ## if ultrasonic too close it value will be very high
         self.currentHeading = data.heading.heading
-        self.usReading = data.ultrasonicFront.distance # only the front need 3 more readings
+        self.usReadingFR = data.ultrasonicFRight.distance # demo 2 hardware
+        self.usReadingFL = data.ultrasonicFLeft.distance
         self.usReadingBack = data.ultrasonicBack.distance
-        self.usReadingLeft = data.ultrasonicLeft.distance
-        self.usReadingRight = data.ultrasonicRight.distance
+        
+        #self.usReadingLeft = data.ultrasonicLeft.distance
+        #self.usReadingRight = data.ultrasonicRight.distance
 
         #rospy.loginfo("heading: " + str(self.currentHeading) + " us_d: " + str(self.usReading))
 
@@ -110,7 +115,9 @@ class LocalPlanner():
             success = self.moveStraight(nextLoc)
             print("CURRENTLOC" ,self.currentLocation)
 
-            if (success and self.objectDetected): continue
+            if (not success and self.objectDetected):
+                nextLocIndex = 0
+                self.objectDetected = False # reset the object detected
             if (success) : nextLocIndex += 1
             else :
                 print("not success")
@@ -146,10 +153,12 @@ class LocalPlanner():
             # go to Contingency
             print("Object DETECTED")
             self.objectDetected = True
-            avoided = self.contigency.execute_cont_plan()
-
+            #avoided = self.contigency.execute_cont_plan()
+            
+            return False
             print("finished cont")
-            return avoided
+            self.callGlobalPlanner(target)
+            #return avoided
 
         
         if self.checkReachTarget(target) : 
@@ -173,7 +182,7 @@ class LocalPlanner():
 
     def scanObstacleUS(self):
         
-        if (self.usReading <= self.usDistStop):
+        if (self.usReadingFR <= self.usDistStop) or (self.usReadingFL <= self.usDistStop):
             return True
         
         return False
@@ -233,7 +242,23 @@ class LocalPlanner():
         return bearing
 
     # TODO : call global planner
-    def callGlobalPlanner(self,currentNode, obstacleNode):
-        pass
+    def callGlobalPlanner(self, obstacleNode):
+
+        currentNode = self.getCurrentNode(obstacleNode)
+        constraint = [currentNode,obstacleNode]
+
+        new_path = self.globalPlannerClient.replan_path(currentNode,self.goal,constraint)
+
+        self.set_path(new_path)
 
 
+    def getCurrentNode(self,nextLoc):
+
+        currentNodeIndex = 0
+
+        if len(self.globalPath) > 1:
+            for i in range(1,len(self.globalPath)):
+                if self.globalPath[i] == nextLoc :
+                    currentNodeIndex = i-1
+        
+        return self.globalPath[currentNodeIndex]
