@@ -108,7 +108,6 @@ class LocalPlanner():
             nextLoc = self.globalPath[nextLocIndex]
             # need to spin (change heading) to the next location
             print(nextLoc)
-            #next_heading = self.calculateTargetHeading(nextLoc)
             next_heading = self.true_bearing(self.currentLocation,nextLoc)
             
             self.spin(next_heading)
@@ -170,20 +169,7 @@ class LocalPlanner():
         
         if self.checkReachTarget(target) : 
             return True
-    
-    def calculateTargetHeading(self,targetPoint):
-        long1 = self.currentLocation.long
-        lat1 = self.currentLocation.lat
-        long2 = targetPoint.long
-        lat2 = targetPoint.lat
 
-        y = math.sin(long2-long1)*math.cos(lat2)
-        x = math.cos(lat1)*math.sin(lat2) - math.sin(lat1)*math.cos(lat2)*math.cos(long2-long1)
-        θ = math.atan2(y, x)
-        target_h = (θ*180/math.pi + 360) % 360
-
-        return target_h
-        
     def checkReachTarget(self,target):
         return self.closeTo(target)
 
@@ -210,16 +196,15 @@ class LocalPlanner():
         print("CURRENT:" , self.currentHeading , " TARG: " , target_heading)
         # self.currentHeading != target_heading
         while(not self.closeToHeading(target_heading)):
-            # if heading_difference below 180, target is to the left; above 180, target to the right
-            #self.currentHeading-target_heading 
+            # if heading_difference below 180, target is to the right; above 180, target to the left
             heading_difference = (target_heading - self.currentHeading) % 360
             
             self.twist.linear.x = 0
 
             if heading_difference < 180:
-                self.twist.angular.z = -self.ANGULAR_SPEED
-            else:
                 self.twist.angular.z = self.ANGULAR_SPEED
+            else:
+                self.twist.angular.z = -self.ANGULAR_SPEED
 
             self.cmdvel_pub.publish(self.twist)
 

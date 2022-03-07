@@ -1,13 +1,13 @@
 from cgi import test
 import math
 
+#doesn't work; disregard and use true_bearing
 def target_heading(loc1,loc2):
     long1 = float(loc1[0])
     lat1 = float(loc1[1])
     long2 = float(loc2[0])
     lat2 = float(loc2[1])
 
-    #print(type(long1))
     y = math.sin(long2-long1)*math.cos(lat2)
     x = math.cos(lat1)*math.sin(lat2) - math.sin(lat1)*math.cos(lat2)*math.cos(long2-long1)
     θ = math.atan2(y, x)
@@ -45,10 +45,10 @@ city = (-90.200203,38.627089)
 test1 = (0,0)
 test2 = (1,1)
 
-print("test2 : ", true_bearing(test1,test2))
-print("test : " ,target_heading(test1,test2))
-print("new" , target_heading(kansas,city))
-#print(target_heading(loc1,loc4))
+#testing true_bearing: works!
+print("test1: ", true_bearing(test1,test2))
+print("test2: " ,true_bearing(test2,test1))
+print("new" , true_bearing(kansas,city))
 #should be northeast
 print(true_bearing(loc1,loc2))
 #southwest
