@@ -50,31 +50,28 @@ print("test : " ,target_heading(test1,test2))
 print("new" , target_heading(kansas,city))
 #print(target_heading(loc1,loc4))
 #should be northeast
-print(target_heading(loc1,loc2))
+print(true_bearing(loc1,loc2))
 #southwest
-print(target_heading(loc2,loc1))
+print(true_bearing(loc2,loc1))
 #northwest
-print(target_heading(loc1,loc3))
+print(true_bearing(loc1,loc3))
 #southeast
-print(target_heading(loc3,loc1))
+print(true_bearing(loc3,loc1))
 
 def heading_difference(c,t):
     heading_difference = (t - c) % 360
 
-    if (heading_difference < 180) : return "LEFT"
-    else: return "RIGHT"
-    #return heading_difference
+    if (heading_difference < 180) : return "RIGHT"
+    else: return "LEFT"
 
 # target to the right
 print("Right-hand target:")
-print(heading_difference(10,350))
-print(heading_difference(350,300))
-print(heading_difference(180,10))
-# target to the left
-print("Left-hand target:")
 print(heading_difference(350,10))
 print(heading_difference(300,350))
 print(heading_difference(10,180))
-
-
+# target to the left
+print("Left-hand target:")
+print(heading_difference(10,350))
+print(heading_difference(350,300))
+print(heading_difference(180,10))
 print(heading_difference(80,10))
