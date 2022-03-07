@@ -26,11 +26,11 @@ class LocalPlanner():
 
         self.usDistStop= 0.5
 
-        self.distanceTolerance = 0.2
-        self.degreeTolerance = 0.3
+        self.distanceTolerance = 10 # 0.2
+        self.degreeTolerance = 5 #0.3
         
-        self.LINEAR_SPEED = 0.1
-        self.ANGULAR_SPEED = 0.1
+        self.LINEAR_SPEED = 110 # 0.1
+        self.ANGULAR_SPEED = 0.5 # 0.1
         
         self.objectDetected = False
 
@@ -44,7 +44,7 @@ class LocalPlanner():
         #rospy.Subscriber("chatter",String,self.callback) # just a test node
 
         rospy.Subscriber("/bench_sensor_state", Robot_Sensor_State, self.parse_sensor_state)
-        rospy.Subscriber('/robot_position', Point, self.updateLocation)
+        rospy.Subscriber("/robot_position", Point, self.updateLocation)
 
         self.cmdvel_pub = rospy.Publisher('cmd_vel', Twist , queue_size=1)
         self.rate = rospy.Rate(50) # 5hz
@@ -133,7 +133,7 @@ class LocalPlanner():
         
         return True
     
-    def moveStraight(self,target):
+    def moveStraight(self,target,targetHeading):
         
         objectDetected = self.scanObstacleUS()
         print("moving straight")
@@ -144,6 +144,10 @@ class LocalPlanner():
             self.cmdvel_pub.publish(self.twist)
                                       
             objectDetected = self.scanObstacleUS()
+            outOfDistanceTolerance = not self.closeToHeading(targetHeading)
+
+            if (outOfDistanceTolerance) :
+                self.spin(targetHeading)
             if objectDetected : break
 
             #self.rate.sleep()  
@@ -151,7 +155,7 @@ class LocalPlanner():
         self.stop()
 
         print("stopped")
-        while(objectDetected) :
+        if(objectDetected) :
             # self.motorDriver.motorStop()
             # go to Contingency
             print("Object DETECTED")
