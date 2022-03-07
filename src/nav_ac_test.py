@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+from doctest import DocTest
 import rospy
 import actionlib
 from parked_custom_msgs.msg import NavigateFeedback, NavigateAction, NavigateResult, Point, Robot_Sensor_State, NavigateGoal
@@ -9,6 +10,15 @@ def dummyDest():
     dest = Point()
     dest.long = -0.5 #950 #-0.5
     dest.lat = 0.5 #793 #0.5
+    dest.angle = 180 #180
+
+    return dest
+
+def dummyDest2():
+
+    dest = Point()
+    dest.long = -0.5 #950 #-0.5
+    dest.lat = 0 #793 #0.5
     dest.angle = 180 #180
 
     return dest
@@ -60,6 +70,21 @@ def dummyPathWithObs():
 
     return path
 
+def dummyPathWithObs2():
+
+    p1 = Point()
+    p1.long = -2
+    p1.lat = 0
+    p1.angle = -999
+
+    p2 = Point()
+    p2.long = -0.5
+    p2.lat = 0
+    p2.angle = -999
+
+    path = [p1,p2]
+
+    return path
 
 def navigate_client():
     # Creates the SimpleActionClient, passing the type of the action
@@ -72,9 +97,10 @@ def navigate_client():
     client.wait_for_server()
     print("after")
 
-    testPath = dummyPathWithObs()
+    testDest = dummyDest2()
+    testPath = dummyPathWithObs2()
     # Creates a goal to send to the action server.
-    goal = NavigateGoal(destination = dummyDest(),path = testPath)
+    goal = NavigateGoal(destination = testDest,path = testPath)
     
     #goal.path = dummyPath()
     #goal.destination = dummyDest()

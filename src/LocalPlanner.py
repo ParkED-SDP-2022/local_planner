@@ -22,7 +22,7 @@ class LocalPlanner():
         self.currentHeading = 0
         self.usReading = float('inf')
 
-        self.usDistTolerance = 0.5
+        self.usDistStop= 0.5
 
         self.distanceTolerance = 0.2
         self.degreeTolerance = 0.3
@@ -30,11 +30,12 @@ class LocalPlanner():
         self.LINEAR_SPEED = 0.1
         self.ANGULAR_SPEED = 0.1
         
+        self.objectDetected = False
 
         self.twist = Twist()
         self.init_twist()
         
-        self.contigency = Contingency(self.usDistTolerance,self)
+        self.contigency = Contingency(self.usDistStop,self)
 
         # rospy.init_node('local_planner', anonymous=True)
         #rospy.Subscriber("chatter",String,self.callback) # just a test node
@@ -70,6 +71,9 @@ class LocalPlanner():
         self.currentHeading = data.heading.heading
         self.usReading = data.ultrasonicFront.distance # only the front need 3 more readings
         self.usReadingBack = data.ultrasonicBack.distance
+        self.usReadingLeft = data.ultrasonicLeft.distance
+        self.usReadingRight = data.ultrasonicRight.distance
+
         #rospy.loginfo("heading: " + str(self.currentHeading) + " us_d: " + str(self.usReading))
 
     # update current location
@@ -85,7 +89,7 @@ class LocalPlanner():
         p1_point = [p1.long,p1.lat]
         p2_point = [p2.long,p2.lat]
 
-        print("DISTANCE: " ,math.dist(p1_point,p2_point))
+        #print("DISTANCE: " ,math.dist(p1_point,p2_point))
         return math.dist(p1_point,p2_point) <= self.distanceTolerance
 
     def execute_mainflow(self):
@@ -106,6 +110,7 @@ class LocalPlanner():
             success = self.moveStraight(nextLoc)
             print("CURRENTLOC" ,self.currentLocation)
 
+            if (success and self.objectDetected): continue
             if (success) : nextLocIndex += 1
             else :
                 print("not success")
@@ -140,6 +145,7 @@ class LocalPlanner():
             # self.motorDriver.motorStop()
             # go to Contingency
             print("Object DETECTED")
+            self.objectDetected = True
             avoided = self.contigency.execute_cont_plan()
 
             print("finished cont")
@@ -167,7 +173,7 @@ class LocalPlanner():
 
     def scanObstacleUS(self):
         
-        if (self.usReading <= self.usDistTolerance):
+        if (self.usReading <= self.usDistStop):
             return True
         
         return False

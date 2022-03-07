@@ -77,14 +77,14 @@ class Contingency:
         self.scanAround()
         self.find_gap()
         self.go()
-        sys.exit('exit!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+        #sys.exit('exit!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
 
         return True
     
     def scanAround(self):
         
         # countChanges = 0
-        print('scanAround started!!!!!!!!!!!!!!')
+        print('scanAround started!')
         print('----------------------')
 
         outOfLastHeading = False
@@ -100,8 +100,8 @@ class Contingency:
             self.lp.twist.angular.z = 0.3
             current_heading = round(self.lp.currentHeading)
             self.cmdvel_pub.publish(self.lp.twist)
-            if(self.lp.closeToHeading(current_heading+1)):
-                self.lp.stop()
+            #if(self.lp.closeToHeading(current_heading+1)):
+            #    self.lp.stop()
             if self.lp.usReading < self.usDistTolerance:
                 self.obstacles[current_heading % 360] = True
                 # countChanges += 1
@@ -142,7 +142,7 @@ class Contingency:
         gap1_diff = self.ch - gap1
         gap2_diff = 180
 
-
+        self.gapDir = "right"
         print("gap1 ", gap1 , " gap2 " , gap2 , " ")
         if (gap1_diff < gap2_diff):
             self.closestGap = gap1
@@ -150,8 +150,9 @@ class Contingency:
         else : 
             self.closestGap = gap2
             self.lp.spin(self.closestGap - GAP_COUNT/2)
+            self.gapDir = "left"
 
-        print('gap is found!!!!!!!!!!')
+        print('gap is found')
         print(self.closestGap)
 
         
@@ -173,12 +174,43 @@ class Contingency:
             deg = 360 - targetheading
         else:
             deg = targetheading
-        distance = self.usDistTolerance / math.cos(math.radians(deg))
-        self.lp.twist.linear.x = 0.1
-        self.lp.twist.angular.z = 0
-        self.cmdvel_pub.publish(self.lp.twist)
-        self.rest(abs(distance/self.usDistTolerance))
+
+
+        #distance = self.usDistTolerance / math.cos(math.radians(deg))
+
+        detectedObject = False
+        # gap on right so we use left sensor , opposite for other dir
+        if (self.gapDir == "right"):
+            while (self.lp.usReadingLeft < self.usDistTolerance or not detectedObject):
+                self.lp.twist.linear.x = 0.05
+                self.lp.twist.angular.z = 0
+                self.cmdvel_pub.publish(self.lp.twist)
+
+                print("leftDist : ", self.lp.usReadingLeft)
+                if (self.lp.scanObstacleUS()):
+                    print("front obstacle detected")
+                    break
+                if self.lp.usReadingLeft < self.usDistTolerance :
+                    detectedObject = True
+
+        else :
+            while (self.lp.usReadingRight < self.usDistTolerance or not detectedObject):
+                self.lp.twist.linear.x = 0.05
+                self.lp.twist.angular.z = 0
+                self.cmdvel_pub.publish(self.lp.twist)
+
+                if (self.lp.scanObstacleUS()):
+                    print("front obstacle detected")
+                    break
+                
+                if self.lp.usReadingRight < self.usDistTolerance :
+                    detectedObject = True
+            
+
+        #self.rest(abs(distance/self.usDistTolerance))
         self.lp.stop()
+
+        print("go finished")
     
 
     def rest(self, t):
