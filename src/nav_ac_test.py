@@ -8,8 +8,8 @@ from parked_custom_msgs.msg import NavigateFeedback, NavigateAction, NavigateRes
 def dummyDest():
 
     dest = Point()
-    dest.long = -0.5 #950 #-0.5
-    dest.lat = 0.5 #793 #0.5
+    dest.long = 900 #950 #-0.5
+    dest.lat = 750 #793 #0.5
     dest.angle = 180 #180
 
     return dest
@@ -26,31 +26,31 @@ def dummyDest2():
 def dummyPathNoObs():
 
     p1 = Point()
-    p1.long = -1 #199
-    p1.lat = -0.5 #793
+    p1.long = 200 #199
+    p1.lat = 750 #793
     p1.angle = -999
 
     p2 = Point()
-    p2.long = -0.5 #500
-    p2.lat = -0.5 #793
+    p2.long = 500 #500
+    p2.lat = 750 #793
     p2.angle = -999
 
     p3 = Point()
-    p3.long = -0.5 #950
-    p3.lat = 0 #793
+    p3.long = 900 #950
+    p3.lat = 750 #793
     p3.angle = -999
 
-    p4 = Point()
-    p4.long = -0.5 #908
-    p4.lat = 0.5 #492
-    p4.angle = -999
+    #p4 = Point()
+    #p4.long = -0.5 #908
+    #p4.lat = 0.5 #492
+    #p4.angle = -999
 
-    p5 = Point()
-    p5.long = 0.5 #996
-    p5.lat = 0.5 #357
-    p5.angle = -999
+    #p5 = Point()
+    #p5.long = 0.5 #996
+    #p5.lat = 0.5 #357
+    #p5.angle = -999
 
-    path = [p1,p2,p3,p4,p5]
+    path = [p1,p2,p3,]
 
     return path
 
@@ -98,7 +98,7 @@ def navigate_client():
     print("after")
 
     testDest = dummyDest()
-    testPath = dummyPathWithObs()
+    testPath = dummyPathNoObs()
     # Creates a goal to send to the action server.
     goal = NavigateGoal(destination = testDest,path = testPath)
     
