@@ -9,6 +9,7 @@ from parked_custom_msgs.msg import Point, Robot_Sensor_State
 from geometry_msgs.msg import Twist
 from std_msgs.msg import String
 from globalPlannerClient import GlobalPlannerClient
+import time
 
 class LocalPlanner():
 
@@ -29,7 +30,7 @@ class LocalPlanner():
         self.usDistStop = 0.5
 
         self.distanceTolerance = 50 # 0.2
-        self.degreeTolerance = 10 #0.3
+        self.degreeTolerance = 20 #0.3
         
         self.LINEAR_SPEED = 1 # 0.1
         self.ANGULAR_SPEED = 40 # 0.1
@@ -49,7 +50,7 @@ class LocalPlanner():
         rospy.Subscriber("/bench_sensor_state", Robot_Sensor_State, self.parse_sensor_state)
         rospy.Subscriber("/robot_position", Point, self.updateLocation)
 
-        self.cmdvel_pub = rospy.Publisher('cmd_vel', Twist , queue_size=1)
+        self.cmdvel_pub = rospy.Publisher('cmd_vel_2', Twist , queue_size=1)
         #self.rate = rospy.Rate(50) # 5hz
     
 
@@ -119,12 +120,12 @@ class LocalPlanner():
             nextLoc = self.globalPath[nextLocIndex]
             # need to spin (change heading) to the next location
             print(nextLoc)
-            next_heading = self.true_bearing(self.currentLocation,nextLoc)
+            #next_heading = self.true_bearing(self.currentLocation,nextLoc)
             
-            print("Spin from current heading : (" ,self.currentHeading,") to next: (",next_heading,")")
+            #print("Spin from current heading : (" ,self.currentHeading,") to next: (",next_heading,")")
             #self.spin(next_heading)
             print("Moving from current location : (" ,self.currentLocation.long,",",self.currentLocation.lat,") to next: (", nextLoc.long,",", nextLoc.lat,")")
-            success = self.moveStraight(nextLoc,next_heading)
+            success = self.moveStraight(nextLoc,0)
             
             if (not success and self.objectDetected):
 
@@ -132,11 +133,8 @@ class LocalPlanner():
                 nextLocIndex = 0 # start from new with new global path
                 self.objectDetected = False # reset the object detected boolean
 
-            if (success) : nextLocIndex += 1
-            else :
-                print("not success")
-                return False
-        
+            nextLocIndex += 1
+            
         # need to spin to change heading to goal heading
         #self.spin(self.goal.angle)
         self.stop()
@@ -155,16 +153,19 @@ class LocalPlanner():
             self.cmdvel_pub.publish(self.twist)
                                       
             objectDetected = self.scanObstacleUS()
-            outOfDistanceTolerance = not self.closeToHeading(targetHeading)
+            #outOfDistanceTolerance = not self.closeToHeading(targetHeading)
 
+            
             #if (outOfDistanceTolerance) :
-                #self.spin(targetHeading)
+            #    print("need to respin to heading")
+            #    self.spin(targetHeading)
             if objectDetected : 
                 break
 
             #self.rate.sleep()  
     
-        self.stop()
+        #self.stop()
+        # time.sleep(1)
 
         print("Stop")
         if(objectDetected) :
@@ -174,6 +175,7 @@ class LocalPlanner():
             self.objectDetected = True
             #avoided = self.contigency.execute_cont_plan()
             
+            #return False
             return False
             print("finished cont")
             self.callGlobalPlanner(target)
@@ -219,9 +221,9 @@ class LocalPlanner():
 
             # if heading_difference < 180, target is to the left; > 180, target to the right
             if heading_difference < 180:
-                self.twist.angular.z = self.ANGULAR_SPEED
-            else:
                 self.twist.angular.z = -self.ANGULAR_SPEED
+            else:
+                self.twist.angular.z = self.ANGULAR_SPEED
 
             self.cmdvel_pub.publish(self.twist) 
         
@@ -230,10 +232,10 @@ class LocalPlanner():
         return True
 
     def true_bearing(self,loc1,loc2):
-        startLat = math.radians(loc1.lat)
-        startLong = math.radians(loc1.long)
-        endLat = math.radians(loc2.lat)
-        endLong = math.radians(loc2.long)
+        startLong = math.radians(loc1.lat)
+        startLat = math.radians(loc1.long)
+        endLong = math.radians(loc2.lat)
+        endLat = math.radians(loc2.long)
 
         dLong = endLong - startLong
 

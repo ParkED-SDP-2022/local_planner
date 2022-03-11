@@ -8,8 +8,8 @@ from parked_custom_msgs.msg import NavigateFeedback, NavigateAction, NavigateRes
 def dummyDest():
 
     dest = Point()
-    dest.long = 900 #950 #-0.5
-    dest.lat = 750 #793 #0.5
+    dest.long = 127 #900 #950 #-0.5
+    dest.lat = 384 #793 #0.5
     dest.angle = 180 #180
 
     return dest
@@ -26,19 +26,19 @@ def dummyDest2():
 def dummyPathNoObs():
 
     p1 = Point()
-    p1.long = 200 #199
+    p1.long = 150 #199
     p1.lat = 750 #793
     p1.angle = -999
 
     p2 = Point()
-    p2.long = 500 #500
-    p2.lat = 750 #793
+    p2.long = 127 #500
+    p2.lat = 384 #793
     p2.angle = -999
 
-    p3 = Point()
-    p3.long = 900 #950
-    p3.lat = 750 #793
-    p3.angle = -999
+    #p3 = Point()
+    #p3.long = 900 #950
+    #p3.lat = 750 #793
+    #p3.angle = -999
 
     #p4 = Point()
     #p4.long = -0.5 #908
@@ -50,7 +50,7 @@ def dummyPathNoObs():
     #p5.lat = 0.5 #357
     #p5.angle = -999
 
-    path = [p1,p2,p3,]
+    path = [p1,p2]
 
     return path
 
