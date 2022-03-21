@@ -18,7 +18,7 @@ def dummyDest2():
 
     dest = Point()
     dest.long = -0.5 #950 #-0.5
-    dest.lat = 0 #793 #0.5
+    dest.lat = 0.5 #793 #0.5
     dest.angle = 180 #180
 
     return dest

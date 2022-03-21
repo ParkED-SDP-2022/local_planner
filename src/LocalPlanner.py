@@ -123,6 +123,7 @@ class LocalPlanner():
         # define closeTo for Point
         while(not self.closeTo(self.goal)):
             
+            if (nextLocIndex >= len(self.globalPath)): break
             nextLoc = self.globalPath[nextLocIndex]
             # need to spin (change heading) to the next location
             print(nextLoc)
@@ -134,11 +135,16 @@ class LocalPlanner():
             print("Moving from current location : (" ,self.currentLocation.long,",",self.currentLocation.lat,") to next: (", nextLoc.long,",", nextLoc.lat,")")
             success = self.moveStraight(nextLoc,0)
             
+            if (success and self.objectDetected):
+                
+                self.objectDetected = False
+                continue
             if (not success and self.objectDetected):
 
                 self.callGlobalPlanner(nextLoc) # update new path
                 nextLocIndex = 0 # start from new with new global path
                 self.objectDetected = False # reset the object detected boolean
+                continue
 
             nextLocIndex += 1
             

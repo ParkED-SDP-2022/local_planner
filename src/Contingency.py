@@ -32,12 +32,15 @@ def consecutive_values2(input_list,clockwise,currentHeading):
         start = round(currentHeading/3.0)
         end = round((currentHeading+90)/3.0)
         for i in range(start,end):
-            if not input_list[i]:
+            if not input_list[i]: 
                 count += 1
             else:
                 count = 0
             if count == GAP_COUNT:
-                return i - (GAP_COUNT-1)
+                return 3.0*(i - (GAP_COUNT-1))
+
+            # i is the last index of the gap
+            # so we multiply by 3 to get angle
             #n = (n + 1) % len(input_list)
     else :
 
@@ -49,7 +52,7 @@ def consecutive_values2(input_list,clockwise,currentHeading):
             else:
                 count = 0
             if count == GAP_COUNT:
-                return (360-i) % 360
+                return ((180-i) % 180) * 3.0
             #n = (n + 1) % len(input_list)
     
     return -1
@@ -118,7 +121,6 @@ class Contingency:
             if self.lp.usReadingFront < self.usDistTolerance:
                 self.obstacles[current_heading % 60] = True
                 # countChanges += 1
-            
             #counter += 1
             #current_heading = (current_heading + 1) % 360
             #scanned[current_heading % 60] = True
@@ -165,9 +167,9 @@ class Contingency:
 
     def find_gap(self):
         
-        # find the gap clockwise
+        # find the gap clockwise (to the right)
         gap1 = consecutive_values2(self.obstacles,True,self.original_heading)
-        # find the gap anti-clockwise
+        # find the gap anti-clockwise (to the left)
         gap2 = consecutive_values2(self.obstacles,False,self.original_heading)
 
         # no gap found
@@ -180,14 +182,17 @@ class Contingency:
         print("gap1 ", gap1 , " gap2 " , gap2 , " ")
         if (gap1_diff < gap2_diff):
             self.closestGap = gap1
-            self.lp.spin(self.closestGap + GAP_COUNT/2)
+            self.lp.spin(self.closestGap + round(GAP_COUNT*3.0/2))
         else : 
             self.closestGap = gap2
-            self.lp.spin(self.closestGap - GAP_COUNT/2)
+
+            self.lp.spin(self.closestGap - round(GAP_COUNT*3.0/2))
             self.gapDir = "left"
 
         print('gap is found')
-        print(self.closestGap)
+        
+        print("Gap: " , self.closestGap)
+        print("Gap direction: " , self.gapDir)
 
         return True     
 
@@ -196,16 +201,7 @@ class Contingency:
         ## TODO : think about the gap 
         
         print('go!!!!!!!!!!!!!!!!!')
-        # this finds the target heading for set target heading
-        if self.closestGap > 180:
-            targetheading = self.closestGap - 20 + self.original_heading
-        else:
-            targetheading = self.closestGap + 20 + self.original_heading
-        # this provides parameter for distance calculation
-        if targetheading > 180:
-            deg = 360 - targetheading
-        else:
-            deg = targetheading
+        
 
         #distance = self.usDistTolerance / math.cos(math.radians(deg))
 
