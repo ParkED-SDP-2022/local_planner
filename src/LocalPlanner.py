@@ -25,22 +25,26 @@ class LocalPlanner():
         self.currentHeading = 0
         self.usReadingFR = float('inf')
         self.usReadingFL = float('inf')
+        
+        self.usReadingFront = float('inf')
         self.usReadingBack = float('inf')
+        self.usReadingRight = float('inf')
+        self.usReadingLeft = float('inf')
 
         self.usDistStop = 0.5
 
-        self.distanceTolerance = 50 # 0.2
-        self.degreeTolerance = 20 #0.3
+        self.distanceTolerance = 0.2 # 52
+        self.degreeTolerance = 0.3 #20
         
-        self.LINEAR_SPEED = 1 # 0.1
-        self.ANGULAR_SPEED = 40 # 0.1
+        self.LINEAR_SPEED = 0.1 # 1
+        self.ANGULAR_SPEED = 0.1 # 40
         
         self.objectDetected = False
 
         self.twist = Twist()
         self.init_twist()
         
-        # self.contigency = Contingency(self.usDistStop,self)
+        self.contigency = Contingency(self.usDistStop,self)
         self.globalPlannerClient = GlobalPlannerClient()
 
         #rospy.init_node('local_planner', anonymous=True)
@@ -50,7 +54,7 @@ class LocalPlanner():
         rospy.Subscriber("/bench_sensor_state", Robot_Sensor_State, self.parse_sensor_state)
         rospy.Subscriber("/robot_position", Point, self.updateLocation)
 
-        self.cmdvel_pub = rospy.Publisher('cmd_vel_2', Twist , queue_size=1)
+        self.cmdvel_pub = rospy.Publisher('cmd_vel', Twist , queue_size=1)
         #self.rate = rospy.Rate(50) # 5hz
     
 
@@ -78,13 +82,14 @@ class LocalPlanner():
     def parse_sensor_state(self,data):
 
         ## if ultrasonic too close it value will be very high
-        #self.currentHeading = data.heading.heading
-        self.usReadingFR = data.ultrasonicFRight.distance # demo 2 hardware
-        self.usReadingFL = data.ultrasonicFLeft.distance
-        self.usReadingBack = data.ultrasonicBack.distance
+        self.currentHeading = data.Compass.heading
+        self.usReadingFront = data.UltrasonicFront.distance # demo 2 hardware
+        self.usReadingBack = data.UltrasonicBack.distance
+
+        #self.usReadingFL = data.ultrasonicFLeft.distance
         
-        #self.usReadingLeft = data.ultrasonicLeft.distance
-        #self.usReadingRight = data.ultrasonicRight.distance
+        self.usReadingLeft = data.UltrasonicLeft.distance
+        self.usReadingRight = data.UltrasonicRight.distance
 
         #rospy.loginfo("heading: " + str(self.currentHeading) + " us_d: " + str(self.usReading))
 
@@ -92,13 +97,14 @@ class LocalPlanner():
     def updateLocation(self,data):
 
         self.currentLocation = data
-        self.currentHeading = data.angle
+        #self.currentHeading = data.angle
         #rospy.loginfo("Long : " + str(data.long) + " Lat : " + str(data.lat))
 
     # check if current location is close to a point
     def closeTo(self, p2):
         p1 = self.currentLocation
 
+        # TODO : need to swap
         p1_point = [p1.long,p1.lat]
         p2_point = [p2.long,p2.lat]
 
@@ -120,10 +126,11 @@ class LocalPlanner():
             nextLoc = self.globalPath[nextLocIndex]
             # need to spin (change heading) to the next location
             print(nextLoc)
-            #next_heading = self.true_bearing(self.currentLocation,nextLoc)
+            next_heading = self.true_bearing(self.currentLocation,nextLoc)
             
-            #print("Spin from current heading : (" ,self.currentHeading,") to next: (",next_heading,")")
-            #self.spin(next_heading)
+            print("Spin from current heading : (" ,self.currentHeading,") to next: (",next_heading,")")
+            self.spin(next_heading)
+
             print("Moving from current location : (" ,self.currentLocation.long,",",self.currentLocation.lat,") to next: (", nextLoc.long,",", nextLoc.lat,")")
             success = self.moveStraight(nextLoc,0)
             
@@ -136,7 +143,7 @@ class LocalPlanner():
             nextLocIndex += 1
             
         # need to spin to change heading to goal heading
-        #self.spin(self.goal.angle)
+        self.spin(self.goal.angle)
         self.stop()
         print("Finished executing main loop")
         
@@ -164,24 +171,19 @@ class LocalPlanner():
 
             #self.rate.sleep()  
     
-        #self.stop()
-        # time.sleep(1)
+        self.stop()
+        time.sleep(1)
 
         print("Stop")
         if(objectDetected) :
-            # self.motorDriver.motorStop()
+    
             # go to Contingency
             print("Object detected")
             self.objectDetected = True
-            #avoided = self.contigency.execute_cont_plan()
-            
-            #return False
-            return False
-            print("finished cont")
-            self.callGlobalPlanner(target)
-            #return avoided
-
-        
+            avoided = self.contigency.execute_cont_plan()
+            if (not avoided) : print("FAIL TO AVOID")
+            return avoided
+           
         if self.checkReachTarget(target) : 
             return True
 
@@ -190,7 +192,7 @@ class LocalPlanner():
 
     def scanObstacleUS(self):
         
-        if (self.usReadingFR <= self.usDistStop) or (self.usReadingFL <= self.usDistStop):
+        if (self.usReadingFront <= self.usDistStop) : #or (self.usReadingFL <= self.usDistStop):
             return True
         
         return False
@@ -217,7 +219,7 @@ class LocalPlanner():
         while(not self.closeToHeading(target_heading)):
             heading_difference = (target_heading - self.currentHeading) % 360
             
-            self.twist.linear.x = self.LINEAR_SPEED
+            self.twist.linear.x = 0 #self.LINEAR_SPEED
 
             # if heading_difference < 180, target is to the left; > 180, target to the right
             if heading_difference < 180:
@@ -232,10 +234,12 @@ class LocalPlanner():
         return True
 
     def true_bearing(self,loc1,loc2):
-        startLong = math.radians(loc1.lat)
-        startLat = math.radians(loc1.long)
-        endLong = math.radians(loc2.lat)
-        endLat = math.radians(loc2.long)
+
+        # TODO : swap this to lat/long
+        startLong = math.radians(loc1.long)
+        startLat = math.radians(loc1.lat)
+        endLong = math.radians(loc2.long)
+        endLat = math.radians(loc2.lat)
 
         dLong = endLong - startLong
 
