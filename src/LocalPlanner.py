@@ -168,19 +168,27 @@ class LocalPlanner():
             objectDetected = self.scanObstacleUS()
             #outOfDistanceTolerance = not self.closeToHeading(targetHeading)
 
-            
             #if (outOfDistanceTolerance) :
             #    print("need to respin to heading")
             #    self.spin(targetHeading)
             if objectDetected : 
-                break
+
+                print("STOP")
+                self.stop()
+                print("Object detected, waiting for 5 seconds")
+                time.sleep(5)
+                objectDetected = self.scanObstacleUS()
+                if (not objectDetected) : continue
+                else :
+                    break
 
             #self.rate.sleep()  
     
         self.stop()
-        time.sleep(1)
+        #time.sleep(1)
 
         print("Stop")
+
         if(objectDetected) :
     
             # go to Contingency

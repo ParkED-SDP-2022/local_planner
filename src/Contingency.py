@@ -6,7 +6,7 @@ from geometry_msgs.msg import Twist
 import sys 
 
 
-GAP_COUNT = 15
+GAP_COUNT = 20
 
 # find the gap by figuring out the first consecutive 40 false which indicate where the gap is.
 def consecutive_values(input_list):
@@ -89,7 +89,9 @@ class Contingency:
 
         self.scanAround()
         gap_exist = self.find_gap()
-        if (not gap_exist): return False
+        if (not gap_exist): 
+            print("NO GAP FOUND")
+            return False
         self.go()
         
         return True
