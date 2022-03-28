@@ -25,22 +25,27 @@ class LocalPlanner():
         self.currentHeading = 0
         self.usReadingFR = float('inf')
         self.usReadingFL = float('inf')
+        
+        self.usReadingFront = float('inf')
         self.usReadingBack = float('inf')
+        self.usReadingRight = float('inf')
+        self.usReadingLeft = float('inf')
 
         self.usDistStop = 0.5
 
-        self.distanceTolerance = 50 # 0.2
-        self.degreeTolerance = 20 #0.3
+        self.distanceTolerance = 50 #0.2 # 52
+        self.degreeTolerance = 10 #20
+        self.degreeToleranceSpin = 50
         
-        self.LINEAR_SPEED = 1 # 0.1
-        self.ANGULAR_SPEED = 40 # 0.1
+        self.LINEAR_SPEED = 1 # 1
+        self.ANGULAR_SPEED = 1 # 40
         
         self.objectDetected = False
 
         self.twist = Twist()
         self.init_twist()
         
-        # self.contigency = Contingency(self.usDistStop,self)
+        self.contigency = Contingency(self.usDistStop,self)
         self.globalPlannerClient = GlobalPlannerClient()
 
         #rospy.init_node('local_planner', anonymous=True)
@@ -50,7 +55,7 @@ class LocalPlanner():
         rospy.Subscriber("/bench_sensor_state", Robot_Sensor_State, self.parse_sensor_state)
         rospy.Subscriber("/robot_position", Point, self.updateLocation)
 
-        self.cmdvel_pub = rospy.Publisher('cmd_vel_2', Twist , queue_size=1)
+        self.cmdvel_pub = rospy.Publisher('cmd_vel', Twist , queue_size=1)
         #self.rate = rospy.Rate(50) # 5hz
     
 
@@ -78,13 +83,14 @@ class LocalPlanner():
     def parse_sensor_state(self,data):
 
         ## if ultrasonic too close it value will be very high
-        #self.currentHeading = data.heading.heading
-        self.usReadingFR = data.ultrasonicFRight.distance # demo 2 hardware
-        self.usReadingFL = data.ultrasonicFLeft.distance
-        self.usReadingBack = data.ultrasonicBack.distance
+        #self.currentHeading = data.Compass.heading
+        self.usReadingFront = data.UltrasonicFront.distance # demo 2 hardware
+        self.usReadingBack = data.UltrasonicBack.distance
+
+        #self.usReadingFL = data.ultrasonicFLeft.distance
         
-        #self.usReadingLeft = data.ultrasonicLeft.distance
-        #self.usReadingRight = data.ultrasonicRight.distance
+        self.usReadingLeft = data.UltrasonicLeft.distance
+        self.usReadingRight = data.UltrasonicRight.distance
 
         #rospy.loginfo("heading: " + str(self.currentHeading) + " us_d: " + str(self.usReading))
 
@@ -99,10 +105,11 @@ class LocalPlanner():
     def closeTo(self, p2):
         p1 = self.currentLocation
 
+        # TODO : need to swap
         p1_point = [p1.long,p1.lat]
         p2_point = [p2.long,p2.lat]
 
-        print("DISTANCE: " ,math.dist(p1_point,p2_point))
+        #print("DISTANCE: " ,math.dist(p1_point,p2_point))
         return math.dist(p1_point,p2_point) <= self.distanceTolerance
 
     def execute_mainflow(self):
@@ -117,26 +124,36 @@ class LocalPlanner():
         # define closeTo for Point
         while(not self.closeTo(self.goal)):
             
+            if (nextLocIndex >= len(self.globalPath)): break
             nextLoc = self.globalPath[nextLocIndex]
             # need to spin (change heading) to the next location
+            print("current location")
+            print(self.currentLocation)
+            print("next location")
             print(nextLoc)
-            #next_heading = self.true_bearing(self.currentLocation,nextLoc)
+            next_heading = self.true_bearing(self.currentLocation,nextLoc)
             
-            #print("Spin from current heading : (" ,self.currentHeading,") to next: (",next_heading,")")
-            #self.spin(next_heading)
+            print("Spin from current heading : (" ,self.currentHeading,") to next: (",next_heading,")")
+            self.spin(next_heading)
+
             print("Moving from current location : (" ,self.currentLocation.long,",",self.currentLocation.lat,") to next: (", nextLoc.long,",", nextLoc.lat,")")
             success = self.moveStraight(nextLoc,0)
             
+            if (success and self.objectDetected):
+                
+                self.objectDetected = False
+                continue
             if (not success and self.objectDetected):
 
                 self.callGlobalPlanner(nextLoc) # update new path
                 nextLocIndex = 0 # start from new with new global path
                 self.objectDetected = False # reset the object detected boolean
+                continue
 
             nextLocIndex += 1
             
         # need to spin to change heading to goal heading
-        #self.spin(self.goal.angle)
+        self.spin(self.goal.angle)
         self.stop()
         print("Finished executing main loop")
         
@@ -146,42 +163,47 @@ class LocalPlanner():
         
         objectDetected = self.scanObstacleUS()
         print("Moving straight")
-        while (not self.closeTo(target)):
-   
+
+        if (not self.closeTo(target)):
             self.twist.linear.x = self.LINEAR_SPEED
             self.twist.angular.z = 0
             self.cmdvel_pub.publish(self.twist)
-                                      
+
+        while (not self.closeTo(target)):
+
             objectDetected = self.scanObstacleUS()
             #outOfDistanceTolerance = not self.closeToHeading(targetHeading)
 
-            
             #if (outOfDistanceTolerance) :
             #    print("need to respin to heading")
             #    self.spin(targetHeading)
             if objectDetected : 
-                break
+
+                print("STOP")
+                self.stop()
+                print("Object detected, waiting for 5 seconds")
+                time.sleep(5)
+                objectDetected = self.scanObstacleUS()
+                if (not objectDetected) : continue
+                else :
+                    break
 
             #self.rate.sleep()  
     
-        #self.stop()
-        # time.sleep(1)
+        self.stop()
+        #time.sleep(1)
 
         print("Stop")
+
         if(objectDetected) :
-            # self.motorDriver.motorStop()
+    
             # go to Contingency
             print("Object detected")
             self.objectDetected = True
-            #avoided = self.contigency.execute_cont_plan()
-            
-            #return False
-            return False
-            print("finished cont")
-            self.callGlobalPlanner(target)
-            #return avoided
-
-        
+            avoided = self.contigency.execute_cont_plan()
+            if (not avoided) : print("FAIL TO AVOID")
+            return avoided
+           
         if self.checkReachTarget(target) : 
             return True
 
@@ -190,7 +212,7 @@ class LocalPlanner():
 
     def scanObstacleUS(self):
         
-        if (self.usReadingFR <= self.usDistStop) or (self.usReadingFL <= self.usDistStop):
+        if (self.usReadingFront <= self.usDistStop) : #or (self.usReadingFL <= self.usDistStop):
             return True
         
         return False
@@ -202,7 +224,10 @@ class LocalPlanner():
         # rospy.loginfo(hello_str)
         self.cmdvel_pub.publish(self.twist)
 
-    def closeToHeading(self,target_heading):
+        time.sleep(3)
+
+    def closeToHeading(self,target_heading):       
+        
         if abs(self.currentHeading-target_heading) <= self.degreeTolerance: 
             return True
         elif abs(self.currentHeading-target_heading) >= 360-self.degreeTolerance: 
@@ -214,41 +239,56 @@ class LocalPlanner():
         
         if (target_heading == -999): return True
         print("CURRENT:" , self.currentHeading , " TARG: " , target_heading)
-        while(not self.closeToHeading(target_heading)):
+        
+        if (not self.closeToHeading(target_heading)):
+            
+            self.twist.linear.x = 0 #self.LINEAR_SPEED
+            self.twist.angular.z = self.ANGULAR_SPEED
+            self.cmdvel_pub.publish(self.twist) 
+
+        
+        while(True):
             heading_difference = (target_heading - self.currentHeading) % 360
             
-            self.twist.linear.x = self.LINEAR_SPEED
+            #self.twist.linear.x = 0 #self.LINEAR_SPEED
 
             # if heading_difference < 180, target is to the left; > 180, target to the right
-            if heading_difference < 180:
-                self.twist.angular.z = -self.ANGULAR_SPEED
-            else:
-                self.twist.angular.z = self.ANGULAR_SPEED
+            #if heading_difference < 180:
+            #    self.twist.angular.z = -self.ANGULAR_SPEED
+            #else:
+            #    self.twist.angular.z = self.ANGULAR_SPEED
+            diff = abs(self.currentHeading-target_heading)
+            if (diff <= self.degreeToleranceSpin):
+                break
+            elif abs(self.currentHeading-target_heading) >= 360-self.degreeToleranceSpin: 
+                break
 
-            self.cmdvel_pub.publish(self.twist) 
+            print("target: ", target_heading, " current : ",self.currentHeading, "diff : " , diff)
+            #self.cmdvel_pub.publish(self.twist) 
         
         self.stop()
 
         return True
+    
+    
+    def true_bearing(self,curLoc,target):
 
-    def true_bearing(self,loc1,loc2):
-        startLong = math.radians(loc1.lat)
-        startLat = math.radians(loc1.long)
-        endLong = math.radians(loc2.lat)
-        endLat = math.radians(loc2.long)
+        # long x axis lat y axis
+        a1 = curLoc.long
+        a2 = curLoc.lat
+        
+        b1 = target.long
+        b2 = target.lat
 
-        dLong = endLong - startLong
+        if (a1 == b1 and a2 == b2):
+            return 0
+        
+        theta = math.atan2(a1-b1,b2-a2)
 
-        dPhi = math.log(math.tan(endLat/2.0+math.pi/4.0)/math.tan(startLat/2.0+math.pi/4.0))
-        if abs(dLong) > math.pi:
-            if dLong > 0.0:
-                dLong = -(2.0 * math.pi - dLong)
-            else:
-                dLong = (2.0 * math.pi + dLong)
+        if (theta < 0.0):
+            theta += math.pi*2
 
-        bearing = (math.degrees(math.atan2(dLong, dPhi)) + 360.0) % 360.0
-
-        return bearing
+        return math.degrees(theta)
 
     def callGlobalPlanner(self, obstacleNode):
 

@@ -49,11 +49,11 @@ class SensorSimulation:
         us_back = Ultrasonic_Sensor()
         us_back.distance = us_back_val
 
-        #us_left = Ultrasonic_Sensor()
-        #us_left.distance = us_left_val
+        us_left = Ultrasonic_Sensor()
+        us_left.distance = us_left_val
 
-        #us_right = Ultrasonic_Sensor()
-        #us_right.distance = us_right_val
+        us_right = Ultrasonic_Sensor()
+        us_right.distance = us_right_val
 
         (roll, pitch, yaw) = euler_from_quaternion([self.odom.pose.pose.orientation.x, self.odom.pose.pose.orientation.y, 
             self.odom.pose.pose.orientation.z, self.odom.pose.pose.orientation.w])
@@ -74,12 +74,12 @@ class SensorSimulation:
         compass.heading = heading
 
         sensor_data = Robot_Sensor_State()
-        sensor_data.heading = compass
-        sensor_data.ultrasonicFRight = us_front
-        sensor_data.ultrasonicFLeft = us_front
-        sensor_data.ultrasonicBack = us_back
-        #sensor_data.ultrasonicLeft = us_left
-        #sensor_data.ultrasonicRight = us_right
+        sensor_data.Compass = compass
+        sensor_data.UltrasonicFront = us_front
+        #sensor_data.ultrasonicFLeft = us_front
+        sensor_data.UltrasonicBack = us_back
+        sensor_data.UltrasonicLeft = us_left
+        sensor_data.UltrasonicRight = us_right
 
 
         self.sensor_pub.publish(sensor_data)
