@@ -98,7 +98,7 @@ class LocalPlanner():
     def updateLocation(self,data):
 
         self.currentLocation = data
-        self.currentHeading = data.angle
+        #self.currentHeading = data.angle
         #rospy.loginfo("Long : " + str(data.long) + " Lat : " + str(data.lat))
 
     # check if current location is close to a point

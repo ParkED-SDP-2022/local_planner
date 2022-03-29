@@ -132,6 +132,7 @@ def true_bearing4(loc1,loc2):
 
     return 360 - bearing
 
+<<<<<<< HEAD
 def true_bearing5(curLoc,target):
 
         # long x axis lat y axis
@@ -151,6 +152,8 @@ def true_bearing5(curLoc,target):
 
         return math.degrees(theta)
 
+=======
+>>>>>>> 304c4b97f192ef689496e5916589ad635f460e4c
 #actual points on the Meadows
 loc1 = (-3.194489,55.940678)
 loc2 = (-3.191724,55.942440)
@@ -169,7 +172,10 @@ test_135 = (1,-1)
 test_225 = (-1,-1)
 test_315 = (-1,1)
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 304c4b97f192ef689496e5916589ad635f460e4c
 #testing true_bearing v1
 print("test1: ", true_bearing(test_origin,test_45))
 print("test2: " ,true_bearing(test_origin,test_135))
@@ -218,12 +224,15 @@ assert round(true_bearing4(test_origin,test_225)) == 135
 assert round(true_bearing4(test_origin,test_315)) == 225
 
 print("assertion passed : v4 \n")
+<<<<<<< HEAD
 
 # first one long should be second lat
 point1 = [730,150]
 point2 = [730,350]
 print("test local 1:", true_bearing5(point1,point2))
 
+=======
+>>>>>>> 304c4b97f192ef689496e5916589ad635f460e4c
 #print("new" , true_bearing(kansas,city))
 #should be northeast
 #print(true_bearing(loc1,loc2))
