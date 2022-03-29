@@ -35,7 +35,7 @@ class LocalPlanner():
 
         self.distanceTolerance = 50
         self.degreeTolerance = 10
-        self.degreeToleranceSpin = 50
+        self.degreeToleranceSpin = 40
         
         self.LINEAR_SPEED = 1 # 1
         self.ANGULAR_SPEED = 1 # 40
@@ -263,7 +263,7 @@ class LocalPlanner():
                 break
 
             #print("target: ", target_heading, " current : ",self.currentHeading, "diff : " , diff)
-            #self.cmdvel_pub.publish(self.twist) 
+            
         
         self.stop()
 
