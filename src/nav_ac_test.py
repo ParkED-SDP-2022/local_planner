@@ -69,6 +69,52 @@ def dummyPathNoObs():
 
     return path
 
+def dummyPathNoObsPixel():
+
+    #p1 = Point()
+    #p1.long = 750 #199
+    #p1.lat = 95 #793
+    #p1.angle = -999
+
+    p2 = Point()
+    p2.long = 750 #500
+    p2.lat = 350#793
+    p2.angle = -999
+
+    p3 = Point()
+    p3.long = 750 #950
+    p3.lat = 550 #793
+    p3.angle = -999
+
+    p4 = Point()
+    p4.long = 750 #908
+    p4.lat = 750 #492
+    p4.angle = -999
+
+    p5 = Point()
+    p5.long = 750 #996
+    p5.lat = 950 #357
+    p5.angle = -999
+
+    p6 = Point()
+    p6.long = 590 #996
+    p6.lat = 950 #357
+    p6.angle = -999
+
+    p7 = Point()
+    p7.long = 357 #996
+    p7.lat = 950#357
+    p7.angle = -999
+
+    #p8 = Point()
+    #p8.long =  #996
+    #p8.lat =  #357
+    #p8.angle = -999
+
+    path = [p3,p4,p5,p6,p7]
+
+    return path
+
 def dummyPathWithObs():
 
     p1 = Point()
@@ -112,8 +158,8 @@ def navigate_client():
     client.wait_for_server()
     print("after")
 
-    testDest = dummyDest2()
-    testPath = dummyPathWithObs()
+    testDest = dummyDest()
+    testPath = dummyPathNoObs()
     # Creates a goal to send to the action server.
     goal = NavigateGoal(destination = testDest,path = testPath)
     

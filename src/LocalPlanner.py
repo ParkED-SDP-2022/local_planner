@@ -33,8 +33,8 @@ class LocalPlanner():
 
         self.usDistStop = 0.5
 
-        self.distanceTolerance = 50 #0.2 # 52
-        self.degreeTolerance = 10 #20
+        self.distanceTolerance = 50
+        self.degreeTolerance = 10
         self.degreeToleranceSpin = 50
         
         self.LINEAR_SPEED = 1 # 1
@@ -98,7 +98,7 @@ class LocalPlanner():
     def updateLocation(self,data):
 
         self.currentLocation = data
-        #self.currentHeading = data.angle
+        self.currentHeading = data.angle
         #rospy.loginfo("Long : " + str(data.long) + " Lat : " + str(data.lat))
 
     # check if current location is close to a point
@@ -117,9 +117,9 @@ class LocalPlanner():
         # move from one point to another point
         nextLocIndex = 0
         print("-----------------------------")
-        print("goal ", self.goal)
+        print("goal \n", self.goal)
         print("-----------------------------")
-        print("global path " ,self.globalPath)
+        print("global path \n" ,self.globalPath)
         print("-----------------------------")
         # define closeTo for Point
         while(not self.closeTo(self.goal)):
@@ -242,28 +242,27 @@ class LocalPlanner():
         
         if (not self.closeToHeading(target_heading)):
             
-            self.twist.linear.x = 0 #self.LINEAR_SPEED
-            self.twist.angular.z = self.ANGULAR_SPEED
+            self.twist.linear.x = 0
+
+            heading_difference = (target_heading - self.currentHeading) % 360
+            # if heading_difference < 180, target is to the left; > 180, target to the right
+            if heading_difference < 180:
+                self.twist.angular.z = -self.ANGULAR_SPEED
+            else:
+                self.twist.angular.z = self.ANGULAR_SPEED
+
             self.cmdvel_pub.publish(self.twist) 
 
         
         while(True):
-            heading_difference = (target_heading - self.currentHeading) % 360
-            
-            #self.twist.linear.x = 0 #self.LINEAR_SPEED
-
-            # if heading_difference < 180, target is to the left; > 180, target to the right
-            #if heading_difference < 180:
-            #    self.twist.angular.z = -self.ANGULAR_SPEED
-            #else:
-            #    self.twist.angular.z = self.ANGULAR_SPEED
+        
             diff = abs(self.currentHeading-target_heading)
             if (diff <= self.degreeToleranceSpin):
                 break
             elif abs(self.currentHeading-target_heading) >= 360-self.degreeToleranceSpin: 
                 break
 
-            print("target: ", target_heading, " current : ",self.currentHeading, "diff : " , diff)
+            #print("target: ", target_heading, " current : ",self.currentHeading, "diff : " , diff)
             #self.cmdvel_pub.publish(self.twist) 
         
         self.stop()

@@ -43,4 +43,7 @@ class ActionServer(object):
 if __name__ == '__main__':
     rospy.init_node('bench_x_local_planner')
     server = ActionServer(rospy.get_name())
-    rospy.spin()
+    try:
+        rospy.spin()
+    except KeyboardInterrupt:
+        print("Shutting down")
