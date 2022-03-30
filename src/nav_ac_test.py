@@ -100,7 +100,7 @@ def dummyPathNoObsFull():
     p2.angle = -999
 
     p3 = Point()
-    p3.long = 570 #908
+    p3.long = 600 #908
     p3.lat = 994 #492
     p3.angle = -999
 
@@ -181,8 +181,8 @@ def navigate_client():
     client.wait_for_server()
     print("after")
 
-    testDest = dummyDestFullPath()
-    testPath = dummyPathNoObsFull()
+    testDest = dummyDest()
+    testPath = dummyPathNoObs()
     # Creates a goal to send to the action server.
     goal = NavigateGoal(destination = testDest,path = testPath)
     

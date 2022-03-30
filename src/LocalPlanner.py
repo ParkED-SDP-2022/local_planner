@@ -134,8 +134,12 @@ class LocalPlanner():
             next_heading = self.true_bearing(self.currentLocation,nextLoc)
             
             print("Spin from current heading : (" ,self.currentHeading,") to next: (",next_heading,")")
+            
             self.spin(next_heading)
-
+            if (not self.closeToHeading(next_heading)):
+                diff = abs(self.currentHeading-next_heading)
+                print("heading not close enough with diff: ", diff)
+            
             print("Moving from current location : (" ,self.currentLocation.long,",",self.currentLocation.lat,") to next: (", nextLoc.long,",", nextLoc.lat,")")
             success = self.moveStraight(nextLoc,0)
             
@@ -235,6 +239,16 @@ class LocalPlanner():
         else:
             return False
 
+    def spin_dir(self,c,t):
+
+        if (c < t) : c+=360
+        left = c - t
+
+        if (left < 180):
+            return "RIGHT"
+        else :
+            return "LEFT"
+
     def spin(self,target_heading):
         
         if (target_heading == -999): return True
@@ -244,12 +258,12 @@ class LocalPlanner():
             
             self.twist.linear.x = 0
 
-            heading_difference = (target_heading - self.currentHeading) % 360
+            dir = self.spin_dir(self.currentHeading,target_heading)
             # if heading_difference < 180, target is to the left; > 180, target to the right
-            if heading_difference < 180:
-                self.twist.angular.z = -self.ANGULAR_SPEED
-            else:
+            if dir == "RIGHT":
                 self.twist.angular.z = self.ANGULAR_SPEED
+            else:
+                self.twist.angular.z = -self.ANGULAR_SPEED
 
             self.cmdvel_pub.publish(self.twist) 
 

@@ -132,7 +132,6 @@ def true_bearing4(loc1,loc2):
 
     return 360 - bearing
 
-<<<<<<< HEAD
 def true_bearing5(curLoc,target):
 
         # long x axis lat y axis
@@ -152,8 +151,6 @@ def true_bearing5(curLoc,target):
 
         return math.degrees(theta)
 
-=======
->>>>>>> 304c4b97f192ef689496e5916589ad635f460e4c
 #actual points on the Meadows
 loc1 = (-3.194489,55.940678)
 loc2 = (-3.191724,55.942440)
@@ -172,10 +169,6 @@ test_135 = (1,-1)
 test_225 = (-1,-1)
 test_315 = (-1,1)
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 304c4b97f192ef689496e5916589ad635f460e4c
 #testing true_bearing v1
 print("test1: ", true_bearing(test_origin,test_45))
 print("test2: " ,true_bearing(test_origin,test_135))
@@ -224,15 +217,12 @@ assert round(true_bearing4(test_origin,test_225)) == 135
 assert round(true_bearing4(test_origin,test_315)) == 225
 
 print("assertion passed : v4 \n")
-<<<<<<< HEAD
 
 # first one long should be second lat
 point1 = [730,150]
 point2 = [730,350]
 print("test local 1:", true_bearing5(point1,point2))
 
-=======
->>>>>>> 304c4b97f192ef689496e5916589ad635f460e4c
 #print("new" , true_bearing(kansas,city))
 #should be northeast
 #print(true_bearing(loc1,loc2))
@@ -243,20 +233,90 @@ print("test local 1:", true_bearing5(point1,point2))
 #southeast
 #print(true_bearing(loc3,loc1))
 
-def heading_difference(c,t):
-    heading_difference = (t - c) % 360
+def conv_360to180(deg):
+    while (deg > 180): deg -= 360
+    while (deg < -180): deg += 360
 
-    if (heading_difference < 180) : return "RIGHT"
-    else: return "LEFT"
+    return deg
+
+def heading_difference(c360,t360):
+
+    c = conv_360to180(c360)
+    t = conv_360to180(t360)
+
+    distance1 = (c-t)
+    distance2 = ((c-360)-t)
+
+    minDistance = min(abs(distance1),abs(distance2))
+
+    if (c + minDistance) == t : 
+         return "RIGHT"
+    else :
+        return "LEFT"
+
+def head_diff(c,t):
+
+    if (c < t) : c+=360
+    left = c - t
+
+    if (left < 180):
+        return "RIGHT"
+    else :
+        return "LEFT"
+
+# QUADRANT 1 angles : TARGET = 45
 
 # target to the right
-#print("Right-hand target:")
-#print(heading_difference(350,10))
-#print(heading_difference(300,350))
-#print(heading_difference(10,180))
-# target to the left
-#print("Left-hand target:")
-#print(heading_difference(10,350))
-#print(heading_difference(350,300))
-#print(heading_difference(180,10))
-#print(heading_difference(80,10))
+print("should be right:")
+assert (head_diff(60,45) == "RIGHT")
+assert (head_diff(110,45)  == "RIGHT")
+assert (head_diff(190,45)  == "RIGHT")
+
+# target tp the right
+print("should be left:")
+print(head_diff(30,45))
+print(head_diff(270,45))
+print(head_diff(330,45))
+
+# QUADRANT 2 angles : TARGET = 135
+
+# target to the right
+print("should be right:")
+print(head_diff(170,135))
+print(head_diff(250,135))
+print(head_diff(290,135))
+
+# target tp the right
+print("should be left:")
+print(head_diff(110,135))
+print(head_diff(45,135))
+print(head_diff(350,135))
+
+# QUADRANT 3 angles : TARGET = 225
+
+# target to the right
+print("should be right:")
+print(head_diff(250,225))
+print(head_diff(350,225))
+print(head_diff(30,225))
+
+# target tp the right
+print("should be left:")
+print(head_diff(170,225))
+print(head_diff(120,225))
+print(head_diff(80,225))
+
+
+# QUADRANT 4 angles : TARGET = 325
+
+# target to the right
+print("should be right:")
+print(head_diff(350,325))
+print(head_diff(45,325))
+print(head_diff(120,325))
+
+# target tp the right
+print("should be left:")
+print(head_diff(290,325))
+print(head_diff(210,325))
+print(head_diff(170,325))
