@@ -320,3 +320,15 @@ print("should be left:")
 print(head_diff(290,325))
 print(head_diff(210,325))
 print(head_diff(170,325))
+
+
+def diff(c,t):
+    raw_diff = c - t if c > t else t - c
+    mod_diff = math.fmod(raw_diff,360)
+    dist = 360 - mod_diff if mod_diff > 180 else mod_diff
+
+    return dist
+
+
+print(diff(0,50))
+print(diff(0,320))

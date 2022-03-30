@@ -34,7 +34,7 @@ class LocalPlanner():
         self.usDistStop = 0.5
 
         self.distanceTolerance = 50
-        self.degreeTolerance = 10
+        self.degreeTolerance = 5
         self.degreeToleranceSpin = 40
         
         self.LINEAR_SPEED = 1 # 1
@@ -48,20 +48,11 @@ class LocalPlanner():
         self.contigency = Contingency(self.usDistStop,self)
         self.globalPlannerClient = GlobalPlannerClient()
 
-        #rospy.init_node('local_planner', anonymous=True)
-        #rospy.Subscriber("chatter",String,self.callback) # just a test node
-
-        #rospy.Subscriber("/bench_heading", Compass , self.parse_heading)
         rospy.Subscriber("/bench_sensor_state", Robot_Sensor_State, self.parse_sensor_state)
         rospy.Subscriber("/robot_position", Point, self.updateLocation)
 
         self.cmdvel_pub = rospy.Publisher('cmd_vel', Twist , queue_size=1)
-        #self.rate = rospy.Rate(50) # 5hz
-    
-
-#    def callback(self,data):
-#        rospy.loginfo(rospy.get_caller_id() + "I heard haha%s", data.data)
-
+        
     def set_path(self,path):
         self.globalPath = path
     
@@ -97,8 +88,14 @@ class LocalPlanner():
     # update current location
     def updateLocation(self,data):
 
-        self.currentLocation = data
-        self.currentHeading = data.angle
+        garbagePoint = Point()
+        garbagePoint.lat = -999
+        garbagePoint.long = -999
+
+        if (data.lat != garbagePoint.lat and data.long != garbagePoint.long):
+            self.currentLocation = data
+        if (garbagePoint.angle != -999):
+            self.currentHeading = data.angle
         #rospy.loginfo("Long : " + str(data.long) + " Lat : " + str(data.lat))
 
     # check if current location is close to a point
@@ -137,7 +134,7 @@ class LocalPlanner():
             
             self.spin(next_heading)
             if (not self.closeToHeading(next_heading)):
-                diff = abs(self.currentHeading-next_heading)
+                diff = self.degree_diff(self.currentHeading,next_heading)
                 print("heading not close enough with diff: ", diff)
             
             print("Moving from current location : (" ,self.currentLocation.long,",",self.currentLocation.lat,") to next: (", nextLoc.long,",", nextLoc.lat,")")
@@ -232,22 +229,28 @@ class LocalPlanner():
 
     def closeToHeading(self,target_heading):       
         
-        if abs(self.currentHeading-target_heading) <= self.degreeTolerance: 
-            return True
-        elif abs(self.currentHeading-target_heading) >= 360-self.degreeTolerance: 
+        diff = self.degree_diff(self.currentHeading,target_heading)
+        if diff <= self.degreeTolerance: 
             return True
         else:
             return False
 
-    def spin_dir(self,c,t):
+    def spin_dir(self,cur,target):
 
-        if (c < t) : c+=360
-        left = c - t
+        if (cur < target) : cur += 360
+        left = c - target
 
         if (left < 180):
             return "RIGHT"
         else :
             return "LEFT"
+
+    def degree_diff(self,c,t):
+        raw_diff = c - t if c > t else t - c
+        mod_diff = math.fmod(raw_diff,360)
+        dist = 360 - mod_diff if mod_diff > 180 else mod_diff
+
+        return dist
 
     def spin(self,target_heading):
         
@@ -259,7 +262,13 @@ class LocalPlanner():
             self.twist.linear.x = 0
 
             dir = self.spin_dir(self.currentHeading,target_heading)
-            # if heading_difference < 180, target is to the left; > 180, target to the right
+            
+            diff = self.degree_diff(self.currentHeading,target_heading)
+            if (diff <= self.degreeToleranceSpin and dir == "RIGHT"):
+                dir = "LEFT"
+            elif (diff <= self.degreeToleranceSpin and dir == "LEFT"):
+                dir = "RIGHT"
+                
             if dir == "RIGHT":
                 self.twist.angular.z = self.ANGULAR_SPEED
             else:
@@ -270,10 +279,8 @@ class LocalPlanner():
         
         while(True):
         
-            diff = abs(self.currentHeading-target_heading)
+            diff = self.degree_diff(self.currentHeading,target_heading)
             if (diff <= self.degreeToleranceSpin):
-                break
-            elif abs(self.currentHeading-target_heading) >= 360-self.degreeToleranceSpin: 
                 break
 
             #print("target: ", target_heading, " current : ",self.currentHeading, "diff : " , diff)
