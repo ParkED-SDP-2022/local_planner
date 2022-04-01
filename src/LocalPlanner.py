@@ -35,7 +35,7 @@ class LocalPlanner():
 
         self.distanceTolerance = 50
         self.degreeTolerance = 5
-        self.degreeToleranceSpin = 40
+        self.degreeDelaySpin = 40
         
         self.LINEAR_SPEED = 1 # 1
         self.ANGULAR_SPEED = 1 # 40
@@ -74,7 +74,7 @@ class LocalPlanner():
     def parse_sensor_state(self,data):
 
         ## if ultrasonic too close it value will be very high
-        #self.currentHeading = data.Compass.heading
+        
         self.usReadingFront = data.UltrasonicFront.distance # demo 2 hardware
         self.usReadingBack = data.UltrasonicBack.distance
 
@@ -140,10 +140,14 @@ class LocalPlanner():
             print("Moving from current location : (" ,self.currentLocation.long,",",self.currentLocation.lat,") to next: (", nextLoc.long,",", nextLoc.lat,")")
             success = self.moveStraight(nextLoc,0)
             
+            # object successfully avoided
+            # assume that the object are on the next node, so we move on to the next node
             if (success and self.objectDetected):
-                
+        
                 self.objectDetected = False
+                nextLocIndex += 1
                 continue
+
             if (not success and self.objectDetected):
 
                 self.callGlobalPlanner(nextLoc) # update new path
@@ -173,17 +177,13 @@ class LocalPlanner():
         while (not self.closeTo(target)):
 
             objectDetected = self.scanObstacleUS()
-            #outOfDistanceTolerance = not self.closeToHeading(targetHeading)
-
-            #if (outOfDistanceTolerance) :
-            #    print("need to respin to heading")
-            #    self.spin(targetHeading)
+            
             if objectDetected : 
 
                 print("STOP")
                 self.stop()
-                print("Object detected, waiting for 5 seconds")
-                time.sleep(5)
+                print("Object detected, waiting for 10 seconds")
+                time.sleep(10)
                 objectDetected = self.scanObstacleUS()
                 if (not objectDetected) : continue
                 else :
@@ -264,9 +264,9 @@ class LocalPlanner():
             dir = self.spin_dir(self.currentHeading,target_heading)
             
             diff = self.degree_diff(self.currentHeading,target_heading)
-            if (diff <= self.degreeToleranceSpin and dir == "RIGHT"):
+            if (diff <= self.degreeDelaySpin and dir == "RIGHT"):
                 dir = "LEFT"
-            elif (diff <= self.degreeToleranceSpin and dir == "LEFT"):
+            elif (diff <= self.degreeDelaySpin and dir == "LEFT"):
                 dir = "RIGHT"
                 
             if dir == "RIGHT":
@@ -280,7 +280,7 @@ class LocalPlanner():
         while(True):
         
             diff = self.degree_diff(self.currentHeading,target_heading)
-            if (diff <= self.degreeToleranceSpin):
+            if (diff <= self.degreeDelaySpin):
                 break
 
             #print("target: ", target_heading, " current : ",self.currentHeading, "diff : " , diff)

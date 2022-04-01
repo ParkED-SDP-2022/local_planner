@@ -71,6 +71,7 @@ class Contingency:
         self.closestGap = None
 
         self.lp = LocalPlanner
+
         self.original_heading = round(self.lp.currentHeading)
         self.right_heading = (self.original_heading + 90) % 360
         self.left_heading = (self.original_heading - 90) % 360
@@ -81,11 +82,16 @@ class Contingency:
 
     def execute_cont_plan(self):
         
-        self.obstacles = [False for i in range(60)]
+        self.obstacles = [False for i in range(180)]
         
         self.original_heading = round(self.lp.currentHeading)
-        self.right_heading = (self.original_heading + 90) % 360
-        self.left_heading = (self.original_heading - 90) % 360
+
+        ## need to spin extra because of delay
+        # right spin actually goes from 0 -> 270
+        # left spin from 0 -> 90
+
+        self.right_heading = (self.original_heading - 90 - self.lp.degreeDelaySpin) % 360
+        self.left_heading = (self.original_heading + 90 + self.lp.degreeDelaySpin) % 360
 
         self.scanAround()
         gap_exist = self.find_gap()
@@ -108,21 +114,23 @@ class Contingency:
         #print(self.obstacles)
 
         #scanned = [False for i in range(0,360)]
-        counter = 0
+        countChanges = 0
         print('scan spin left')
         # spin left
+
+        self.lp.twist.linear.x = 0
+        self.lp.twist.angular.z = self.lp.ANGULAR_SPEED
+        self.cmdvel_pub.publish(self.lp.twist)
+
         while not self.lp.closeToHeading(self.left_heading): 
 
-            self.lp.twist.linear.x = 0
-            self.lp.twist.angular.z = self.lp.ANGULAR_SPEED
+            current_heading = self.lp.currentHeading - self.lp.degreeDelaySpin
 
-            current_heading = round(self.lp.currentHeading/3.0)
-            self.cmdvel_pub.publish(self.lp.twist)
-            #if(self.lp.closeToHeading(current_heading+1)):
-            #    self.lp.stop()
+            value_heading = round(current_heading/3.0)
+            
             if self.lp.usReadingFront < self.usDistTolerance:
-                self.obstacles[current_heading % 60] = True
-                # countChanges += 1
+                self.obstacles[value_heading % 60] = True
+                countChanges += 1
             #counter += 1
             #current_heading = (current_heading + 1) % 360
             #scanned[current_heading % 60] = True
@@ -130,26 +138,25 @@ class Contingency:
             
             #print(true_count)
 
-        #print(self.obstacles)
-        # for i in range(0,360):
-        #     print('the element in ' ,i, 'th position is ' ,self.obstacles[i])
+        print("number of changes:",countChanges)
+    
         self.lp.stop()
-        #self.lp.spin(self.ch)
-
+        
         print('scan spin right')
+        self.lp.twist.linear.x = 0
+        self.lp.twist.angular.z = -self.lp.ANGULAR_SPEED
+        self.cmdvel_pub.publish(self.lp.twist)
+
         # spin right
         while not self.lp.closeToHeading(self.right_heading): 
 
-            self.lp.twist.linear.x = 0
-            self.lp.twist.angular.z = -self.lp.ANGULAR_SPEED
+            current_heading = self.lp.currentHeading + self.lp.degreeDelaySpin
 
-            current_heading = round(self.lp.currentHeading/3.0)
-            self.cmdvel_pub.publish(self.lp.twist)
-            #if(self.lp.closeToHeading(current_heading+1)):
-            #    self.lp.stop()
+            value_heading = round(current_heading/3.0)
+
             if self.lp.usReadingFront < self.usDistTolerance:
-                self.obstacles[current_heading % 60] = True
-                # countChanges += 1
+                self.obstacles[value_heading % 60] = True
+                countChanges += 1
             
             #counter += 1
             #current_heading = (current_heading + 1) % 360
@@ -158,6 +165,7 @@ class Contingency:
             
             #print(true_count)
 
+        print("number of changes:",countChanges)
         #print(self.obstacles)
         # for i in range(0,360):
         #     print('the element in ' ,i, 'th position is ' ,self.obstacles[i])
