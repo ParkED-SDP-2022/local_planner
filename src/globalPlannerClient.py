@@ -9,6 +9,13 @@ from parked_custom_msgs.msg import Point,PlanGlobalPathAction,PlanGlobalPathActi
 class GlobalPlannerClient:
 
     def  __init__(self):
+        self.LAT_MIN = 0.0
+        self.LAT_MAX = 1.2631578947
+        self.LONG_MIN = 0.0
+        self.LONG_MAX = 1.0
+        self.IMAGE_Y = 950
+        self.IMAGE_X = 1200
+
         self.client = actionlib.SimpleActionClient('plan_global_path', PlanGlobalPathAction)
         
     def replan_path(self,currentNode,obstacleNode,destinationNode):
@@ -38,7 +45,7 @@ class GlobalPlannerClient:
 
         result = self.client.get_result()
 
-        newGlobalPath = result.path
+        newGlobalPath = self.convert_to_pixel(result.path,1)
         # Prints out the result of executing the action
         return newGlobalPath
 
@@ -67,19 +74,12 @@ class GlobalPlannerClient:
 
         result = self.client.get_result()
 
-        newGlobalPath = result.path
+        newGlobalPath = self.convert_to_pixel(result.path,1)
         # Prints out the result of executing the action
         return newGlobalPath
 
 
     def convert_to_longlat(self,position_in_point):
-
-        self.LAT_MIN = 0.0
-        self.LAT_MAX = 1.2631578947
-        self.LONG_MIN = 0.0
-        self.LONG_MAX = 1.0
-        self.IMAGE_Y = 950
-        self.IMAGE_X = 1200
 
         change_in_Long = self.LONG_MAX - self.LONG_MIN
         change_in_lat = self.LAT_MAX - self.LAT_MIN
@@ -92,3 +92,28 @@ class GlobalPlannerClient:
         point_to_convert.lat = lat_conversion_constant * point_to_convert.lat
 
         return point_to_convert
+
+    def convert_to_pixel(self,data,flag):
+        
+        change_in_Long = self.LONG_MAX - self.LONG_MIN
+        change_in_lat = self.LAT_MAX - self.LAT_MIN
+        image_x = self.IMAGE_X
+        image_y = self.IMAGE_Y
+
+        processed_points = []
+        for point in data:
+            long_conversion_constant = image_y / change_in_Long
+            lat_conversion_constant = image_x / change_in_lat
+
+            point_to_convert = point
+
+            if flag == 1:
+                point_to_convert.long = long_conversion_constant * point_to_convert.long
+                point_to_convert.lat = lat_conversion_constant * point_to_convert.lat
+            if flag == 2:
+                point_to_convert.long = (1 / long_conversion_constant) * point_to_convert.long
+                point_to_convert.lat = (1 / lat_conversion_constant) * point_to_convert.lat
+
+            processed_points.append(point_to_convert)
+
+        return processed_points
