@@ -25,7 +25,7 @@ class GlobalPlannerClient:
         constraint = [self.convert_to_longlat(currentNode),self.convert_to_longlat(obstacleNode)]
         
         # Creates a goal to send to the action server.
-        goal = PlanGlobalPathGoal(current_position = current_position,destination = destination,constraint = constraint)
+        goal = PlanGlobalPathGoal(current_position = current_position,destination = destination,constraints = constraint)
         
         #goal.path = dummyPath()
         #goal.destination = dummyDest()
@@ -38,7 +38,8 @@ class GlobalPlannerClient:
 
         result = self.client.get_result()
 
-        newGlobalPath = result.path
+        newGlobalPathLongLat = result.path
+        newGlobalPath = [self.convert_to_longlat(x) for x in newGlobalPathLongLat]
         # Prints out the result of executing the action
         return newGlobalPath
 
@@ -54,7 +55,7 @@ class GlobalPlannerClient:
         goal = self.convert_to_longlat(goalNode)
 
         # Creates a goal to send to the action server.
-        goal = PlanGlobalPathGoal(current_position = current_position,destination = goal,constraint = [])
+        goal = PlanGlobalPathGoal(current_position = current_position,destination = goal,constraints = [])
         
         #goal.path = dummyPath()
         #goal.destination = dummyDest()
@@ -67,11 +68,11 @@ class GlobalPlannerClient:
 
         result = self.client.get_result()
 
-        newGlobalPath = result.path
+        newGlobalPathLongLat = result.path
+        newGlobalPath = [self.convert_to_longlat(x) for x in newGlobalPathLongLat]
         # Prints out the result of executing the action
         return newGlobalPath
-
-
+        
     def convert_to_longlat(self,position_in_point):
 
         self.LAT_MIN = 0.0

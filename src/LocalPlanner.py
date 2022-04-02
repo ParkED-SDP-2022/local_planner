@@ -35,7 +35,7 @@ class LocalPlanner():
 
         self.distanceTolerance = 50
         self.degreeTolerance = 5
-        self.degreeDelaySpin = 40
+        self.degreeDelaySpin = 50
         
         self.LINEAR_SPEED = 1 # 1
         self.ANGULAR_SPEED = 1 # 40
@@ -118,7 +118,7 @@ class LocalPlanner():
         print("-----------------------------")
         print("prev global path \n" ,self.globalPath)
         print("-----------------------------")
-        #self.callGlobalPlannerTest()
+        self.callGlobalPlannerTest()
         print("-----------------------------")
         print("new global path \n" ,self.globalPath)
         print("-----------------------------")
@@ -293,7 +293,7 @@ class LocalPlanner():
             
             if (self.closeToHeading(target_heading)) :
                 break
-            
+
             diff = self.degree_diff(self.currentHeading,target_heading)
             if (diff > self.degreeDelaySpin and oppositeSpin == True):
                 oppositeSpin = False

@@ -181,8 +181,12 @@ def navigate_client():
     client.wait_for_server()
     print("after")
 
-    testDest = dummyDestFullPath()
-    testPath = dummyPathNoObsFull() #dummyPathNoObs()
+
+    #testDest = dummyDestSpinCalibration()
+    #testPath = []
+
+    testDest = dummyDest()
+    testPath = dummyPathNoObs() #dummyPathNoObs()
     # Creates a goal to send to the action server.
     goal = NavigateGoal(destination = testDest,path = testPath)
     
