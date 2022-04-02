@@ -116,8 +116,13 @@ class LocalPlanner():
         print("-----------------------------")
         print("goal \n", self.goal)
         print("-----------------------------")
-        print("global path \n" ,self.globalPath)
+        print("prev global path \n" ,self.globalPath)
         print("-----------------------------")
+        #self.callGlobalPlannerTest()
+        print("-----------------------------")
+        print("new global path \n" ,self.globalPath)
+        print("-----------------------------")
+
         # define closeTo for Point
         while(not self.closeTo(self.goal)):
             
@@ -238,7 +243,7 @@ class LocalPlanner():
     def spin_dir(self,cur,target):
 
         if (cur < target) : cur += 360
-        left = c - target
+        left = cur - target
 
         if (left < 180):
             return "RIGHT"
@@ -257,6 +262,8 @@ class LocalPlanner():
         if (target_heading == -999): return True
         print("CURRENT:" , self.currentHeading , " TARG: " , target_heading)
         
+        oppositeSpin = False
+
         if (not self.closeToHeading(target_heading)):
             
             self.twist.linear.x = 0
@@ -264,10 +271,15 @@ class LocalPlanner():
             dir = self.spin_dir(self.currentHeading,target_heading)
             
             diff = self.degree_diff(self.currentHeading,target_heading)
+            
+            
+            print("spin dir : ", dir , " angle diff: " , diff)
             if (diff <= self.degreeDelaySpin and dir == "RIGHT"):
                 dir = "LEFT"
+                oppositeSpin = True
             elif (diff <= self.degreeDelaySpin and dir == "LEFT"):
                 dir = "RIGHT"
+                oppositeSpin = True
                 
             if dir == "RIGHT":
                 self.twist.angular.z = self.ANGULAR_SPEED
@@ -278,9 +290,14 @@ class LocalPlanner():
 
         
         while(True):
-        
+            
+            if (self.closeToHeading(target_heading)) :
+                break
+            
             diff = self.degree_diff(self.currentHeading,target_heading)
-            if (diff <= self.degreeDelaySpin):
+            if (diff > self.degreeDelaySpin and oppositeSpin == True):
+                oppositeSpin = False
+            elif (diff <= self.degreeDelaySpin and oppositeSpin == False):
                 break
 
             #print("target: ", target_heading, " current : ",self.currentHeading, "diff : " , diff)
@@ -313,12 +330,20 @@ class LocalPlanner():
     def callGlobalPlanner(self, obstacleNode):
 
         currentNode = self.getCurrentNode(obstacleNode)
-        constraint = [currentNode,obstacleNode]
+        #constraint = [currentNode,obstacleNode]
 
-        new_path = self.globalPlannerClient.replan_path(currentNode,self.goal,constraint)
+        new_path = self.globalPlannerClient.replan_path(currentNode,obstacleNode,self.goal)
 
         self.set_path(new_path)
 
+    def callGlobalPlannerTest(self):
+
+        currentNode = self.currentLocation
+        goalNode = self.goal
+
+        new_path = self.globalPlannerClient.sync_path(currentNode,goalNode)
+
+        self.set_path(new_path)
 
     def getCurrentNode(self,nextLoc):
 
