@@ -45,12 +45,7 @@ class GlobalPlannerClient:
 
         result = self.client.get_result()
 
-<<<<<<< HEAD
-        newGlobalPathLongLat = result.path
-        newGlobalPath = [self.convert_to_longlat(x) for x in newGlobalPathLongLat]
-=======
         newGlobalPath = self.convert_to_pixel(result.path,1)
->>>>>>> dceba8c462e2050cc410ebb3c48d4eeaab8ad4a4
         # Prints out the result of executing the action
         return newGlobalPath
 
@@ -79,12 +74,7 @@ class GlobalPlannerClient:
 
         result = self.client.get_result()
 
-<<<<<<< HEAD
-        newGlobalPathLongLat = result.path
-        newGlobalPath = [self.convert_to_longlat(x) for x in newGlobalPathLongLat]
-=======
         newGlobalPath = self.convert_to_pixel(result.path,1)
->>>>>>> dceba8c462e2050cc410ebb3c48d4eeaab8ad4a4
         # Prints out the result of executing the action
         return newGlobalPath
         
