@@ -89,7 +89,7 @@ class LocalPlanner():
 
         #self.usReadingFL = data.ultrasonicFLeft.distance
         
-       # self.usReadingLeft = data.UltrasonicLeft.distance
+        #self.usReadingLeft = data.UltrasonicLeft.distance
         #self.usReadingRight = data.UltrasonicRight.distance
 
         #rospy.loginfo("heading: " + str(self.currentHeading) + " us_d: " + str(self.usReading))
@@ -201,7 +201,12 @@ class LocalPlanner():
                 print("Object detected, waiting for 10 seconds")
                 time.sleep(10)
                 objectDetected = self.scanObstacleUS()
-                if (not objectDetected) : continue
+                if (not objectDetected) : 
+                    self.twist.linear.x = self.LINEAR_SPEED
+                    self.twist.angular.z = 0
+                    self.cmdvel_pub.publish(self.twist)
+                    continue
+                
                 else :
                     break
 

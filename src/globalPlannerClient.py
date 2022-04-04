@@ -118,21 +118,32 @@ class GlobalPlannerClient:
         return processed_points
 
 
-# if __name__ == "__main__":
+if __name__ == "__main__":
 
-#     rospy.init_node('test_global_planner')
-#     GPC = GlobalPlannerClient()
+    rospy.init_node('test_global_planner')
+    GPC = GlobalPlannerClient()
 
-#     current = Point()
-#     current.long = 750 #500
-#     current.lat = 350#793
-#     current.angle = -999
+    current = Point()
+    current.long = 750 #500
+    current.lat = 350#793
+    current.angle = -999
 
-#     goal = Point()
-#     goal.long = 760 #996
-#     goal.lat = 980 #357
-#     goal.angle = -999
+    goal = Point()
+    goal.long = 760 #996
+    goal.lat = 980 #357
+    goal.angle = -999
 
-#     global_path = GPC.sync_path(current,goal)
+    global_path = GPC.sync_path(current,goal)
 
-#     print(global_path)
+    print(global_path)
+
+    for p in global_path :
+
+        print("long: ", p.long, "lat: ", p.lat)
+
+
+    new_current = p[3]
+    obs_node = p[4]
+    goal_node = global_path[-1]
+    new_global_path = GPC.replan_path()
+
