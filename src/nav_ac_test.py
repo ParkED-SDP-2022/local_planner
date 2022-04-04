@@ -7,12 +7,12 @@ from parked_custom_msgs.msg import NavigateFeedback, NavigateAction, NavigateRes
 
 def dummyDest():
 
-    dest = Point()
-    dest.long = 357 #900 #950 #-0.5
-    dest.lat = 975 #793 #0.5
-    dest.angle = 270 #180
+    p5 = Point()
+    p5.long = 760 #996
+    p5.lat = 980 #357
+    p5.angle = 180
 
-    return dest
+    return p5
 
 def dummyDestSim():
 
@@ -28,7 +28,7 @@ def dummyDestSpinCalibration():
     dest = Point()
     dest.long = 775 #950 #-0.5
     dest.lat = 141 #793 #0.5
-    dest.angle = 270 #180
+    dest.angle = 70 #180
 
     return dest
 
@@ -43,10 +43,10 @@ def dummyDestFullPath():
 
 def dummyPathNoObs():
 
-    #p1 = Point()
-    #p1.long = 750 #199
-    #p1.lat = 95 #793
-    #p1.angle = -999
+    p1 = Point()
+    p1.long = 732 #199
+    p1.lat = 152 #793
+    p1.angle = -999
 
     p2 = Point()
     p2.long = 750 #500
@@ -55,35 +55,35 @@ def dummyPathNoObs():
 
     p3 = Point()
     p3.long = 750 #950
-    p3.lat = 450 #793
+    p3.lat = 500 #793
     p3.angle = -999
 
     p4 = Point()
     p4.long = 750 #908
-    p4.lat = 750 #492
+    p4.lat = 730 #492
     p4.angle = -999
 
     p5 = Point()
-    p5.long = 750 #996
-    p5.lat = 950 #357
+    p5.long = 760 #996
+    p5.lat = 980 #357
     p5.angle = -999
 
-    p6 = Point()
-    p6.long = 590 #996
-    p6.lat = 975 #357
-    p6.angle = -999
+    #p6 = Point()
+    #p6.long = 590 #996
+    #p6.lat = 975 #357
+    #p6.angle = -999
 
-    p7 = Point()
-    p7.long = 357 #996
-    p7.lat = 1000 #357
-    p7.angle = -999
+    #p7 = Point()
+    #p7.long = 357 #996
+    #p7.lat = 1000 #357
+    #p7.angle = -999
 
     #p8 = Point()
     #p8.long =  #996
     #p8.lat =  #357
     #p8.angle = -999
 
-    path = [p3,p4,p5,p6,p7]
+    path = list(reversed([p1,p2,p3,p4,p5]))
 
     return path
 

@@ -20,7 +20,7 @@ class GlobalPlannerClient:
         
     def replan_path(self,currentNode,obstacleNode,destinationNode):
     
-        print("wait for server")
+        print("wait for global path server")
         # Waits until the action server has started up and started
         # listening for goals.
         self.client.wait_for_server()
@@ -116,3 +116,23 @@ class GlobalPlannerClient:
             processed_points.append(point_to_convert)
 
         return processed_points
+
+
+# if __name__ == "__main__":
+
+#     rospy.init_node('test_global_planner')
+#     GPC = GlobalPlannerClient()
+
+#     current = Point()
+#     current.long = 750 #500
+#     current.lat = 350#793
+#     current.angle = -999
+
+#     goal = Point()
+#     goal.long = 760 #996
+#     goal.lat = 980 #357
+#     goal.angle = -999
+
+#     global_path = GPC.sync_path(current,goal)
+
+#     print(global_path)
