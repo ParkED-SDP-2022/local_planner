@@ -28,10 +28,11 @@ class LocalPlanner():
         
         self.usReadingFront = float('inf')
         self.usReadingBack = float('inf')
-        self.usReadingRight = float('inf')
-        self.usReadingLeft = float('inf')
+        
+        #self.usReadingRight = float('inf')
+        #self.usReadingLeft = float('inf')
 
-        self.usDistStop = 5
+        self.usDistStop = 40
 
         self.distanceTolerance = 50
 
@@ -49,6 +50,7 @@ class LocalPlanner():
         self.init_twist()
         
         self.contigency = Contingency(self.usDistStop,self)
+        self.globalPlannerClient = GlobalPlannerClient()
 
         rospy.Subscriber("/bench_sensor_state", Robot_Sensor_State, self.parse_sensor_state)
         rospy.Subscriber("/robot_position", Point, self.updateLocation)
@@ -84,7 +86,8 @@ class LocalPlanner():
 
         ## if ultrasonic too close it value will be very high
         
-        self.usReadingFront= data.UltrasonicFLeft.distance # demo 2 hardware
+        self.usReadingFront= data.UltrasonicFront.distance # demo 2 hardware
+        self.usReadingBack = data.UltrasonicBack.distance
         #self.usReadingFRight = data.UltrasonicFront.distance
 
         #self.usReadingFL = data.ultrasonicFLeft.distance

@@ -14,6 +14,15 @@ def dummyDest():
 
     return p5
 
+def dummyDest2():
+
+    p2 = Point()
+    p2.long = 198 #500
+    p2.lat = 935#793
+    p2.angle = -999
+
+    return p2
+
 def dummyDestSim():
 
     dest = Point()
@@ -83,9 +92,27 @@ def dummyPathNoObs():
     #p8.lat =  #357
     #p8.angle = -999
 
-    path = list(reversed([p1,p2,p3,p4,p5]))
+    path = [p1,p2,p3,p4,p5]
 
     return path
+
+def secondPath():
+
+    # lat is y 
+    # long is x
+    # maybe
+
+    #p1 = Point()
+    #p1.long = 158 #199
+    #p1.lat = 503 #793
+    #p1.angle = -999
+
+    p2 = Point()
+    p2.long = 198 #500
+    p2.lat = 935#793
+    p2.angle = -999
+
+    return [p2]
 
 def dummyPathNoObsFull():
 
@@ -185,9 +212,9 @@ def navigate_client():
     #testDest = dummyDestSpinCalibration()
     #testPath = []
 
-    testDest = dummyDest()
-    testPath = dummyPathNoObs() #dummyPathNoObs()
-    # Creates a goal to send to the action server.
+    testDest = dummyDest2()
+    testPath = secondPath()#dummyPathNoObs()
+    # Creates a goalto send to the action server.
     goal = NavigateGoal(destination = testDest,path = testPath)
     
     #goal.path = dummyPath()
