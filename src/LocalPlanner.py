@@ -385,9 +385,10 @@ class LocalPlanner():
     def callGlobalPlanner(self, obstacleNode):
 
         currentNode = self.getCurrentNode(obstacleNode)
+        goalNode = self.globalPath[-1]
         #constraint = [currentNode,obstacleNode]
 
-        new_path = self.globalPlannerClient.replan_path(currentNode,obstacleNode,self.goal)
+        new_path = self.globalPlannerClient.replan_path(currentNode,obstacleNode,goalNode)
 
         print("-----------------------------")
         print("new global path \n" ,new_path)
@@ -395,7 +396,7 @@ class LocalPlanner():
 
         self.set_path(new_path)
 
-    def callGlobalPlannerTest(self):
+    def callGlobalPlannerSync(self):
 
         currentNode = self.currentLocation
         goalNode = self.goal
